@@ -62,7 +62,7 @@ const EKYCForm = () => {
                   classNames(
                     'w-full rounded-lg px-4 py-2 text-left text-sm font-medium',
                     selected
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-blue-900 text-white'
                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   )
                 }>
@@ -89,7 +89,7 @@ const EKYCForm = () => {
                     <button
                       type="button"
                       onClick={handleVerify}
-                      className="h-[50px] rounded-lg bg-blue-600 px-12 text-sm font-medium text-white hover:bg-blue-700"
+                      className="h-[50px] rounded-lg bg-blue-900 px-12 text-sm font-medium text-white hover:bg-blue-700"
                     >
                       Verify
                     </button>
@@ -107,7 +107,7 @@ const EKYCForm = () => {
                         <button
                           type="button"
                           onClick={handleSubmit}
-                          className="h-[50px] rounded-lg bg-green-600 px-8 py-2 text-sm font-medium text-white hover:bg-green-700"
+                          className="h-[50px] rounded-lg bg-blue-900 px-8 py-2 text-sm font-medium text-white hover:bg-green-700"
                         >
                           Submit
                         </button>

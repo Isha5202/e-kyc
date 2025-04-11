@@ -18,7 +18,7 @@ const UserBreadcrumb = ({ pageName }: UserBreadcrumbProps) => {
               Dashboard /
             </Link>
           </li>
-          <li className="font-medium text-primary">{pageName}</li>
+          <li className="font-medium text-pink-600">{pageName}</li>
         </ol>
       </nav>
     </div>
