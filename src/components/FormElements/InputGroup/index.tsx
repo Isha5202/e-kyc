@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 type InputGroupProps = {
   className?: string;
+  maxLength?: number;
   label: string;
   placeholder: string;
   type: HTMLInputTypeAttribute;
