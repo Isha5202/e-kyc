@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDeepvueCredentials } from '../settings/utils';
 
 const BASE_URL = 'https://production.deepvue.tech';
-const CLIENT_ID = process.env.DEEPVUE_CLIENT_ID!;
-const CLIENT_SECRET = process.env.DEEPVUE_CLIENT_SECRET!;
 
 let cachedToken: { token: string; fetchedAt: number } | null = null;
 
@@ -13,9 +12,13 @@ async function getAccessToken(): Promise<string | null> {
   }
 
   try {
+    const { client_id, client_secret } = await getDeepvueCredentials();
+console.log('🔐 Credentials:', { client_id, client_secret });
+
+
     const form = new URLSearchParams();
-    form.append('client_id', CLIENT_ID);
-    form.append('client_secret', CLIENT_SECRET);
+    form.append('client_id', client_id);
+    form.append('client_secret', client_secret);
 
     const res = await fetch(`${BASE_URL}/v1/authorize`, {
       method: 'POST',
@@ -36,9 +39,11 @@ async function getAccessToken(): Promise<string | null> {
 
 // Aadhaar OTP Generate
 async function handleAadhaarGenerateOTP(params: any) {
+  const { client_id, client_secret } = await getDeepvueCredentials();
+
   const headers = {
-    'x-api-key': CLIENT_SECRET,
-    'client-id': CLIENT_ID,
+    'x-api-key': client_secret,
+    'client-id': client_id,
     'Content-Type': 'application/json',
   };
 
@@ -54,320 +59,77 @@ async function handleAadhaarGenerateOTP(params: any) {
 }
 
 // Aadhaar OTP Verify
-// Aadhaar OTP Verify (v2)
-// Aadhaar OTP Verify (v2)
 async function handleAadhaarVerifyOTP(params: any) {
-    console.log("verify otp0");
-    const headers = {
-      'x-api-key': CLIENT_SECRET,
-      'client-id': CLIENT_ID,
-      'Content-Type': 'application/json',
-    };
-  
-    const { otp, reference_id } = params;
-  
-    const url = `${BASE_URL}/v2/ekyc/aadhaar/verify-otp`;
-  
-    const res = await fetch(`${url}?otp=${encodeURIComponent(otp)}&reference_id=${encodeURIComponent(reference_id)}&consent=Y&purpose=ForKYC`, {
-      method: 'POST',
-      headers,
-    });
-  
-    const raw = await res.text();
-    try {
-      return JSON.parse(raw);
-    } catch (error) {
-      console.error('❌ Invalid Aadhaar OTP verification response:', raw);
-      return { error: 'Invalid JSON response from Aadhaar OTP verify' };
-    }
-  }
-  
-
-// PAN
-async function handlePan(params: any) {
-    console.log("pan");
-  const accessToken = await getAccessToken();
-  if (!accessToken) return { error: 'Token fetch failed' };
+  const { client_id, client_secret } = await getDeepvueCredentials();
 
   const headers = {
-    'Authorization': `Bearer ${accessToken}`,
-    'x-api-key': CLIENT_SECRET,
+    'x-api-key': client_secret,
+    'client-id': client_id,
     'Content-Type': 'application/json',
   };
+
+  const { otp, reference_id } = params;
+
+  const url = `${BASE_URL}/v2/ekyc/aadhaar/verify-otp`;
+
+  const res = await fetch(
+    `${url}?otp=${encodeURIComponent(otp)}&reference_id=${encodeURIComponent(reference_id)}&consent=Y&purpose=ForKYC`,
+    { method: 'POST', headers }
+  );
+
+  const raw = await res.text();
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error('❌ Invalid Aadhaar OTP verification response:', raw);
+    return { error: 'Invalid JSON response from Aadhaar OTP verify' };
+  }
+}
+
+// Shared GET handler
+async function getAuthHeaders(): Promise<any> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) return null;
+
+  const { client_secret } = await getDeepvueCredentials();
+
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    'x-api-key': client_secret,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function handlePan(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
 
   const url = `${BASE_URL}/v1/verification/pan-plus?pan_number=${params.pan_number}`;
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
 
-// PAN-Aadhaar Link
 async function handlePanAadhaarLink(params: any) {
-    console.log("adhar link");
-  const accessToken = await getAccessToken();
-  if (!accessToken) return { error: 'Token fetch failed' };
-
-  const headers = {
-    'Authorization': `Bearer ${accessToken}`,
-    'x-api-key': CLIENT_SECRET,
-    'Content-Type': 'application/json',
-  };
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
 
   const url = `${BASE_URL}/v1/verification/pan-aadhaar-link-status?pan_number=${params.pan_number}&aadhaar_number=${params.aadhaar_number}`;
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
 
-// Shared POST handler
-// async function handleStandardPOST(url: string, params: any) {
-//     console.log("std post");
-//   const accessToken = await getAccessToken();
-//   if (!accessToken) return { error: 'Token fetch failed' };
-
-//   const headers = {
-//     'Authorization': `Bearer ${accessToken}`,
-//     'x-api-key': CLIENT_SECRET,
-//     'Content-Type': 'application/json',
-//   };
-
-//   const res = await fetch(url, {
-//     method: 'POST',
-//     headers,
-//     body: JSON.stringify(params),
-//   });
-
-//   const raw = await res.text();
-//   try {
-//     return JSON.parse(raw);
-//   } catch {
-//     return { error: `Invalid JSON from ${url}` };
-//   }
-// }
-
-// DL (POST + GET)
 async function handleDL(params: any) {
-    console.log("dl");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const postURL = `${BASE_URL}/v1/verification/post-driving-license?dl_number=${params.rc_number}&dob=${params.dob}`;
-    const postRes = await fetch(postURL, { method: 'POST', headers });
-    const postData = await postRes.json();
-  
-    if (!postData.request_id) return postData;
-  
-    const getURL = `${BASE_URL}/v1/verification/get-driving-license?request_id=${postData.request_id}`;
-  
-    // Retry polling with a delay
-    let attempts = 0;
-    const maxAttempts = 5;
-    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-  
-    while (attempts < maxAttempts) {
-      const getRes = await fetch(getURL, { method: 'GET', headers });
-      const getData = await getRes.json();
-  
-      if (getData[0]?.status !== "in_progress") {
-        return getData;
-      }
-  
-      await delay(2000); // wait 2 seconds before retry
-      attempts++;
-    }
-  
-    return { error: "Verification still in progress after multiple attempts" };
-  }
-  
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
 
-// Voter ID (POST + GET)
-async function handleVoterID(params: any) {
-    console.log("vid");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const postURL = `${BASE_URL}/v1/verification/post-voter-id?epic_number=${params.epic_number}`;
-    const postRes = await fetch(postURL, { method: 'POST', headers });
-    const postData = await postRes.json();
-  
-    if (!postData.request_id) return postData;
-  
-    const getURL = `${BASE_URL}/v1/verification/get-voter-id?request_id=${postData.request_id}`;
-  
-    // Retry polling with a delay
-    let attempts = 0;
-    const maxAttempts = 5;
-    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-  
-    while (attempts < maxAttempts) {
-      const getRes = await fetch(getURL, { method: 'GET', headers });
-      const getData = await getRes.json();
-  
-      if (getData[0]?.status !== "in_progress") {
-        return getData;
-      }
-  
-      await delay(2000); // wait 2 seconds before retry
-      attempts++;
-    }
-  
-    return { error: "Verification still in progress after multiple attempts" };
-  }
-  
-
-// Passport
-async function handlePassport(params: any) {
-    console.log("passport");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const url = `${BASE_URL}/v1/verification/passport?file_number=${params.file_number}&dob=${params.dob}`;
-  
-    const res = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-  
-    const data = await res.json();
-    return data;
-  }
-  
-
-// CIN
-async function handleCIN(params: any) {
-    console.log("cin");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const url = `${BASE_URL}/v1/verification/mca/cin?id_number=${params.cin_number}`;
-  
-    const res = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-  
-    const data = await res.json();
-    return data;
-  }
-  
-
-// GST
-async function handleGST(params: any) {
-    console.log("gst");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const url = `${BASE_URL}/v1/verification/gstinlite?gstin_number=${params.gstin_number}`;
-  
-    const res = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-  
-    const data = await res.json();
-    return data;
-  }
-  
-
-// FSSAI
-async function handleFSSAI(params: any) {
-    console.log("fssai");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const url = `${BASE_URL}/v1/business-compliance/fssai-verification?fssai_id=${params.fssai_id}`;
-  
-    const res = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-  
-    const data = await res.json();
-    return data;
-  }
-  
-
-// Shopact
-async function handleShopact(params: any) {
-    console.log("shopact");
-    const accessToken = await getAccessToken();
-    if (!accessToken) return { error: 'Token fetch failed' };
-  
-    const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': CLIENT_SECRET,
-      'Content-Type': 'application/json',
-    };
-  
-    const url = `${BASE_URL}/v1/business-compliance/shop-establishment-certificate?certificate_number=${params.certificate_number}&state_code=${params.state_code}`;
-  
-    const res = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-  
-    const data = await res.json();
-    return data;
-  }
-  
-
-// Udyam
-async function handleUdyam(params: any) {
-  console.log("udyam");
-  const accessToken = await getAccessToken();
-  if (!accessToken) return { error: 'Token fetch failed' };
-
-  const headers = {
-    'Authorization': `Bearer ${accessToken}`,
-    'x-api-key': CLIENT_SECRET,
-    'Content-Type': 'application/json',
-  };
-
-  // 1. POST request to initiate Udyam verification
-  const postURL = `${BASE_URL}/v1/verification/async/post-udyam-details?udyam_aadhaar_number=${params.udyam_aadhaar_number}`;
+  const postURL = `${BASE_URL}/v1/verification/post-driving-license?dl_number=${params.rc_number}&dob=${params.dob}`;
   const postRes = await fetch(postURL, { method: 'POST', headers });
   const postData = await postRes.json();
 
   if (!postData.request_id) return postData;
 
-  // 2. GET request to poll the result
-  const getURL = `${BASE_URL}/v1/verification/async/get-udyam-details?request_id=${postData.request_id}`;
+  const getURL = `${BASE_URL}/v1/verification/get-driving-license?request_id=${postData.request_id}`;
 
-  // Retry polling with delay
   let attempts = 0;
   const maxAttempts = 5;
   const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -380,14 +142,119 @@ async function handleUdyam(params: any) {
       return getData;
     }
 
-    await delay(2000); // wait 2 seconds before retry
+    await delay(2000);
     attempts++;
   }
 
-  return { error: "Verification still in progress after multiple attempts" };
+  return { error: 'Verification still in progress after multiple attempts' };
 }
 
-  
+async function handleVoterID(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const postURL = `${BASE_URL}/v1/verification/post-voter-id?epic_number=${params.epic_number}`;
+  const postRes = await fetch(postURL, { method: 'POST', headers });
+  const postData = await postRes.json();
+
+  if (!postData.request_id) return postData;
+
+  const getURL = `${BASE_URL}/v1/verification/get-voter-id?request_id=${postData.request_id}`;
+
+  let attempts = 0;
+  const maxAttempts = 5;
+  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+  while (attempts < maxAttempts) {
+    const getRes = await fetch(getURL, { method: 'GET', headers });
+    const getData = await getRes.json();
+
+    if (getData[0]?.status !== 'in_progress') {
+      return getData;
+    }
+
+    await delay(2000);
+    attempts++;
+  }
+
+  return { error: 'Verification still in progress after multiple attempts' };
+}
+
+async function handlePassport(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const url = `${BASE_URL}/v1/verification/passport?file_number=${params.file_number}&dob=${params.dob}`;
+  const res = await fetch(url, { method: 'GET', headers });
+  return res.json();
+}
+
+async function handleCIN(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const url = `${BASE_URL}/v1/verification/mca/cin?id_number=${params.cin_number}`;
+  const res = await fetch(url, { method: 'GET', headers });
+  return res.json();
+}
+
+async function handleGST(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const url = `${BASE_URL}/v1/verification/gstinlite?gstin_number=${params.gstin_number}`;
+  const res = await fetch(url, { method: 'GET', headers });
+  return res.json();
+}
+
+async function handleFSSAI(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const url = `${BASE_URL}/v1/business-compliance/fssai-verification?fssai_id=${params.fssai_id}`;
+  const res = await fetch(url, { method: 'GET', headers });
+  return res.json();
+}
+
+async function handleShopact(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const url = `${BASE_URL}/v1/business-compliance/shop-establishment-certificate?certificate_number=${params.certificate_number}&state_code=${params.state_code}`;
+  const res = await fetch(url, { method: 'GET', headers });
+  return res.json();
+}
+
+async function handleUdyam(params: any) {
+  const headers = await getAuthHeaders();
+  if (!headers) return { error: 'Token fetch failed' };
+
+  const postURL = `${BASE_URL}/v1/verification/async/post-udyam-details?udyam_aadhaar_number=${params.udyam_aadhaar_number}`;
+  const postRes = await fetch(postURL, { method: 'POST', headers });
+  const postData = await postRes.json();
+
+  if (!postData.request_id) return postData;
+
+  const getURL = `${BASE_URL}/v1/verification/async/get-udyam-details?request_id=${postData.request_id}`;
+
+  let attempts = 0;
+  const maxAttempts = 5;
+  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+  while (attempts < maxAttempts) {
+    const getRes = await fetch(getURL, { method: 'GET', headers });
+    const getData = await getRes.json();
+
+    if (getData[0]?.status !== 'in_progress') {
+      return getData;
+    }
+
+    await delay(2000);
+    attempts++;
+  }
+
+  return { error: 'Verification still in progress after multiple attempts' };
+}
 
 // Main API Route
 export async function POST(req: NextRequest) {
@@ -435,12 +302,12 @@ export async function POST(req: NextRequest) {
         data = await handleUdyam(params);
         break;
       default:
-        return NextResponse.json({ error: 'Invalid verification type' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
     return NextResponse.json(data);
-  } catch (err: any) {
-    console.error('❌ Unexpected error in /api/kyc:', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+  } catch (err) {
+    console.error('❌ KYC POST error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

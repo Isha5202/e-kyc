@@ -1,45 +1,108 @@
+'use client';
+
+import { useState } from 'react';
 import InputGroup from "@/components/FormElements/InputGroup";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function AddUserForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to add user');
+      }
+
+      router.push('/manage-user');
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong.');
+    }
+  };
+
   return (
     <div className="mx-auto w-full">
       <ShowcaseSection title="Add New User" className="!p-6.5">
-        <form action="#" className="space-y-8">
-          {/* Row: Name & Email */}
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div className="flex flex-col gap-4 xl:flex-row">
             <InputGroup
+              name="name"
               label="Full Name"
               type="text"
               placeholder="Enter full name"
               className="w-full"
+              value={formData.name}
+              handleChange={handleChange}
+              required
             />
             <InputGroup
+              name="email"
               label="Email"
               type="email"
               placeholder="Enter email address"
               className="w-full"
+              value={formData.email}
+              handleChange={handleChange}
+              required
             />
           </div>
 
-          {/* Row: Password & Confirm Password */}
           <div className="flex flex-col gap-4 xl:flex-row">
             <InputGroup
+              name="password"
               label="Password"
               type="password"
               placeholder="Enter password"
               className="w-full"
+              value={formData.password}
+              handleChange={handleChange}
+              required
             />
             <InputGroup
+              name="confirmPassword"
               label="Confirm Password"
               type="password"
               placeholder="Confirm password"
               className="w-full"
+              value={formData.confirmPassword}
+              handleChange={handleChange}
+              required
             />
           </div>
 
-          {/* Buttons: Back + Submit */}
+          {error && <p className="text-red-500">{error}</p>}
+
           <div className="mt-6 flex gap-3">
             <Link
               href="/manage-user"
