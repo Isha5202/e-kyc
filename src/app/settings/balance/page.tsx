@@ -5,7 +5,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export default function BalancePage() {
   return (
-    <div className="mx-auto w-full max-w-[1080px]">
+    <div className="mx-auto w-full">
       <Breadcrumb pageName="Balance" />
       <BalanceDetails />
     </div>

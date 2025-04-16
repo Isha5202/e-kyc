@@ -3,7 +3,7 @@ import UserBreadcrumb from "@/components/UserBreadcrumbs/Breadcrumb";
 
 export default function EKYCPage() {
   return (
-    <div className="mx-auto w-full max-w-[1080px]">
+    <div className="mx-auto w-full">
       <UserBreadcrumb pageName="E-KYC Verification" />
       <EKYCForm />
     </div>

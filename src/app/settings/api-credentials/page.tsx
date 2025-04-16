@@ -5,7 +5,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export default function ApiCredentialsPage() {
   return (
-    <div className="mx-auto w-full max-w-[1080px]">
+    <div className="mx-auto w-full">
       <Breadcrumb pageName="API Credentials" />
       <ApiCredentialsForm />
     </div>

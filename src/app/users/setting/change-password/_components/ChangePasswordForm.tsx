@@ -29,7 +29,7 @@ const ChangePasswordForm = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1080px]">
+    <div className="mx-auto w-full">
       <ShowcaseSection title="Change Password" className="!p-6.5">
         <form className="space-y-6">
           <InputGroup
@@ -71,7 +71,7 @@ const ChangePasswordForm = () => {
           <button
             type="button"
             onClick={handleChange}
-            className="h-[50px] rounded-lg bg-green-600 px-8 py-2 text-sm font-medium text-white hover:bg-green-700 l"
+            className="h-[50px] rounded-lg bg-blue-900 px-8 py-2 text-sm font-medium text-white hover:bg-blue-900 l"
           >
             Update Password
           </button>

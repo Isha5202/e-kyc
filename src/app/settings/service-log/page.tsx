@@ -5,7 +5,7 @@ import ServiceLogTable from "./_components/ServiceLogTable";
 
 export default function ServiceLogPage() {
   return (
-    <div className="mx-auto w-full max-w-[1080px]">
+    <div className="mx-auto w-full">
       <Breadcrumb pageName="Service Log" />
       <ServiceLogTable />
     </div>

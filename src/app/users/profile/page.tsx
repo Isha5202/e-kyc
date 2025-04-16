@@ -38,22 +38,18 @@ export default function Page() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[970px]">
+    <div className="mx-auto w-full">
       <UserBreadcrumb pageName="Profile" />
 
       <div className="overflow-hidden rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
         <div className="relative z-20 h-35 md:h-65">
-          <Image
-            src={data?.coverPhoto}
-            alt="profile cover"
-            className="h-full w-full rounded-tl-[10px] rounded-tr-[10px] object-cover object-center"
-            width={970}
-            height={260}
-            style={{
-              width: "auto",
-              height: "auto",
-            }}
-          />
+        <Image
+  src={data?.coverPhoto}
+  alt="profile cover"
+  className="h-full w-full rounded-tl-[10px] rounded-tr-[10px] object-cover object-center"
+  width={1920}
+  height={400}
+/>
           {/* <div className="absolute bottom-1 right-1 z-10 xsm:bottom-4 xsm:right-4">
             <label
               htmlFor="cover"

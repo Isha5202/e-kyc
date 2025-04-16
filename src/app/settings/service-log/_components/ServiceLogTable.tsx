@@ -1,17 +1,18 @@
-// src/app/settings/service-log/_components/ServiceLogTable.tsx
-
 'use client';
 
-import DataTable from 'react-data-table-component';
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
+
+// Dynamically import the DataTable
+const DataTable = dynamic(() => import('react-data-table-component'), { ssr: false });
 
 const logs = [
   { id: 1, name: 'John Doe', type: 'Aadhar', time: '2025-04-11 10:30 AM', amount: 1.5 },
   { id: 2, name: 'Jane Smith', type: 'PAN', time: '2025-04-11 11:00 AM', amount: 2.5 },
   { id: 3, name: 'Amit Patel', type: 'Aadhar', time: '2025-04-11 11:15 AM', amount: 1.5 },
-];
+]; 
 
-const columns = [
+const rawColumns = [
   {
     name: 'User Name',
     selector: (row: any) => row.name,
@@ -35,9 +36,14 @@ const columns = [
   },
 ];
 
+const columns = rawColumns.map(({ $allowOverflow, ...col }: any) => ({
+  ...col,
+  ...(!!$allowOverflow && { allowOverflow: true }),
+}));
+
 export default function ServiceLogTable() {
   return (
-    <div className="mx-auto w-full max-w-[1080px]">
+    <div className="mx-auto w-full">
       <div className={cn(
         "p-6 grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1",
         "dark:bg-gray-dark dark:shadow-card"

@@ -5,7 +5,7 @@ import "jsvectormap/dist/jsvectormap.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Login | NextAdmin - Next.js Dashboard Kit",
+  title: "NAMCO",
   description: "Login to access the NextAdmin dashboard.",
 };
 

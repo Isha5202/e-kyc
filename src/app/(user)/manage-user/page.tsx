@@ -1,11 +1,16 @@
-// src/app/(user)/manage-user/page.tsx
-"use client"
+'use client';
+
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import ManageUserTable from "./_components/ManageUserTable";
+import dynamic from 'next/dynamic';
+
+// 👇 Dynamically import the component with SSR turned off
+const ManageUserTable = dynamic(() => import('./_components/ManageUserTable'), {
+  ssr: false,
+});
 
 export default function ManageUsersPage() {
   return (
-    <div className="mx-auto w-full ">
+    <div className="mx-auto w-full">
       <Breadcrumb pageName="Manage User" />
       <ManageUserTable />
     </div>
