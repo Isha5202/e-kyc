@@ -123,7 +123,7 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
     <>
       {Object.entries(resultData).map(([key, value]) => (
         <div key={key}>
-          🧩 <strong>{key.replace(/_/g, ' ')}:</strong>{' '}
+           <strong>{key.replace(/_/g, ' ')}:</strong>{' '}
           {typeof value === 'object' ? JSON.stringify(value) : value?.toString() || 'N/A'}
         </div>
       ))}
