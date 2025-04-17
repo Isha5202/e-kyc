@@ -6,7 +6,6 @@ import InputGroup from "@/components/FormElements/InputGroup";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import KYCResultCard from "./KYCResultCard";
 
-
 const ekycTypes = [
   { id: "pan", label: "PAN Verification" },
   { id: "aadhar", label: "Aadhar Verification" },
@@ -88,6 +87,15 @@ export default function EKYCForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTabChange = (index: number) => {
+    setSelectedIndex(index);
+    setFormData({});
+    setAadhaarStep(1);
+    setOtp("");
+    setTxnId("");
+    setReferenceId("");
   };
 
   const renderFormFields = (type: string) => {
@@ -278,40 +286,39 @@ export default function EKYCForm() {
     }
   };
 
-  const renderResult = (data: any): JSX.Element => {
-    if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {
-      return <p>{String(data)}</p>;
-    }
-  
-    if (Array.isArray(data)) {
-      return (
-        <ul className="list-disc list-inside pl-4">
-          {data.map((item, index) => (
-            <li key={index}>{renderResult(item)}</li>
-          ))}
-        </ul>
-      );
-    }
-  
-    if (typeof data === "object" && data !== null) {
-      return (
-        <ul className="list-disc list-inside pl-4">
-          {Object.entries(data).map(([key, value]) => (
-            <li key={key}>
-              <strong>{key}:</strong> {renderResult(value)}
-            </li>
-          ))}
-        </ul>
-      );
-    }
-  
-    return <p>Unsupported data type</p>;
-  };
-  
+  // const renderResult = (data: any): JSX.Element => {
+  //   if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {
+  //     return <p>{String(data)}</p>;
+  //   }
+
+  //   if (Array.isArray(data)) {
+  //     return (
+  //       <ul className="list-disc list-inside pl-4">
+  //         {data.map((item, index) => (
+  //           <li key={index}>{renderResult(item)}</li>
+  //         ))}
+  //       </ul>
+  //     );
+  //   }
+
+  //   if (typeof data === "object" && data !== null) {
+  //     return (
+  //       <ul className="list-disc list-inside pl-4">
+  //         {Object.entries(data).map(([key, value]) => (
+  //           <li key={key}>
+  //             <strong>{key}:</strong> {renderResult(value)}
+  //           </li>
+  //         ))}
+  //       </ul>
+  //     );
+  //   }
+
+  //   return <p>Unsupported data type</p>;
+  // };
 
   return (
     <ShowcaseSection title="E-KYC Verification">
-      <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
+      <Tab.Group selectedIndex={selectedIndex} onChange={handleTabChange}>
         <div className="flex">
           {/* Tab List */}
           <Tab.List className="w-64 flex flex-col gap-1 border-r border-gray-200 pr-4">
@@ -355,9 +362,9 @@ export default function EKYCForm() {
                 </form>
 
                 {results[type.id] && (
-  <KYCResultCard data={results[type.id]} />
-)}
+                  <KYCResultCard type={ekycTypes[selectedIndex].id} data={results[ekycTypes[selectedIndex].id]} />
 
+                )}
               </Tab.Panel>
             ))}
           </Tab.Panels>

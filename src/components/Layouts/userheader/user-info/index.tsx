@@ -1,25 +1,59 @@
-"use client";
+'use client';
 
-import { ChevronUpIcon } from "@/assets/icons";
+import { ChevronUpIcon } from '@/assets/icons';
 import {
   Dropdown,
   DropdownContent,
   DropdownTrigger,
-} from "@/components/ui/dropdown";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
+} from '@/components/ui/dropdown';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { LogOutIcon, SettingsIcon, UserIcon } from './icons';
 
 export function UserInfo() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string; image?: string } | null>(null);
 
-  const USER = {
-    name: "John Smith",
-    email: "johnson@nextadmin.com",
-    img: "/images/user/user-03.png",
+  // Fetch user info
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        if (res.ok) {
+          setUser(data);
+        } else {
+          console.error('[UserInfo] Failed to fetch user:', data?.error || 'Unknown error');
+        }
+      } catch (error) {
+        console.error('[UserInfo] Unexpected error:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('/api/logout', {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        router.push('/login');
+      } else {
+        console.error('[Logout] Failed to logout');
+      }
+    } catch (err) {
+      console.error('[Logout] Unexpected error:', err);
+    }
   };
+
+  if (!user) return null;
 
   return (
     <Dropdown isOpen={isOpen} setIsOpen={setIsOpen}>
@@ -28,22 +62,18 @@ export function UserInfo() {
 
         <figure className="flex items-center gap-3">
           <Image
-            src={USER.img}
+            src={user.image || '/images/user/user-03.png'}
             className="size-12"
-            alt={`Avatar of ${USER.name}`}
+            alt={`Avatar of ${user.name}`}
             role="presentation"
-            width={200}
-            height={200}
+            width={48}
+            height={48}
           />
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
-            <span>{USER.name}</span>
-
+            <span>{user.name}</span>
             <ChevronUpIcon
               aria-hidden
-              className={cn(
-                "rotate-180 transition-transform",
-                isOpen && "rotate-0",
-              )}
+              className={cn('rotate-180 transition-transform', isOpen && 'rotate-0')}
               strokeWidth={1.5}
             />
           </figcaption>
@@ -58,58 +88,53 @@ export function UserInfo() {
 
         <figure className="flex items-center gap-2.5 px-5 py-3.5">
           <Image
-            src={USER.img}
+            src={user.image || '/images/user/user-03.png'}
             className="size-12"
-            alt={`Avatar for ${USER.name}`}
+            alt={`Avatar for ${user.name}`}
             role="presentation"
-            width={200}
-            height={200}
+            width={48}
+            height={48}
           />
 
           <figcaption className="space-y-1 text-base font-medium">
-            <div className="mb-2 leading-none text-dark dark:text-white">
-              {USER.name}
-            </div>
-
-            <div className="leading-none text-gray-6">{USER.email}</div>
+            <div className="mb-2 leading-none text-dark dark:text-white">{user.name}</div>
+            <div className="leading-none text-gray-6">{user.email}</div>
           </figcaption>
         </figure>
 
         <hr className="border-[#E8E8E8] dark:border-dark-3" />
 
         <div className="p-2 text-base text-blue-900 dark:text-dark-6 [&>*]:cursor-pointer">
-  <Link
-    href={"/users/profile"}
-    onClick={() => setIsOpen(false)}
-    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-pink-50 hover:text-pink-600 dark:hover:bg-dark-3 dark:hover:text-white"
-  >
-    <UserIcon />
-    <span className="mr-auto text-base font-medium">View profile</span>
-  </Link>
+          <Link
+            href="/users/profile"
+            onClick={() => setIsOpen(false)}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-pink-50 hover:text-pink-600 dark:hover:bg-dark-3 dark:hover:text-white"
+          >
+            <UserIcon />
+            <span className="mr-auto text-base font-medium">View profile</span>
+          </Link>
 
-  <Link
-    href={"/users/setting/change-password"}
-    onClick={() => setIsOpen(false)}
-    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-pink-50 hover:text-pink-600 dark:hover:bg-dark-3 dark:hover:text-white"
-  >
-    <SettingsIcon />
-    <span className="mr-auto text-base font-medium">Change Password</span>
-  </Link>
-</div>
+          <Link
+            href="/users/setting/change-password"
+            onClick={() => setIsOpen(false)}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-pink-50 hover:text-pink-600 dark:hover:bg-dark-3 dark:hover:text-white"
+          >
+            <SettingsIcon />
+            <span className="mr-auto text-base font-medium">Change Password</span>
+          </Link>
+        </div>
 
-<hr className="border-[#E8E8E8] dark:border-dark-3" />
+        <hr className="border-[#E8E8E8] dark:border-dark-3" />
 
-<div className="p-2 text-base text-blue-900 dark:text-dark-6">
-  <Link
-    href="/login"
-    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-pink-50 hover:text-pink-600 dark:hover:bg-dark-3 dark:hover:text-white"
-    onClick={() => setIsOpen(false)}
-  >
-    <LogOutIcon />
-    <span className="text-base font-medium">Log out</span>
-  </Link>
-</div>
-
+        <div className="p-2 text-base text-blue-900 dark:text-dark-6">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-pink-50 hover:text-pink-600 dark:hover:bg-dark-3 dark:hover:text-white"
+          >
+            <LogOutIcon />
+            <span className="text-base font-medium">Log out</span>
+          </button>
+        </div>
       </DropdownContent>
     </Dropdown>
   );

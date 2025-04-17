@@ -1,37 +1,51 @@
-import { db } from '@/lib/db';
-import { users } from '@/lib/schema';
-import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { createJWT, setAuthCookie } from '@/lib/auth';
+import pool from '@/lib/db'; // Your pg pool
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json();
+  console.log('[POST /api/login] Login request received');
+  const body = await req.json();
+  console.log('[POST /api/login] Parsed body:', body);
 
-  if (!email || !password) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  const { email, password } = body;
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT id, email, password_hash, role FROM users WHERE email = $1',
+      [email]
+    );
+    client.release();
+
+    const user = result.rows[0];
+
+    if (!user || user.password_hash !== password) {
+      console.warn('[POST /api/login] Invalid credentials');
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    console.log('[POST /api/login] User found:', user);
+
+    const token = await createJWT({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    console.log('[POST /api/login] JWT created:', token);
+
+    // Create a response and set cookie directly on it
+    const response = NextResponse.json({
+      success: true,
+      role: user.role, // ⬅️ Return role for client redirect
+    });
+
+    setAuthCookie(token, response); // ⬅️ This mutates the response
+    console.log('[POST /api/login] Auth cookie set');
+
+    return response;
+  } catch (error) {
+    console.error('[POST /api/login] Error during login:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  const user = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-
-  if (user.length === 0) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-  }
-
-  // 🔑 Compare with password_hash (plaintext comparison — insecure in production)
-  if (user[0].password_hash !== password) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-  }
-
-  return NextResponse.json({
-    message: 'Login successful',
-    user: {
-      id: user[0].id,
-      name: user[0].name,
-      email: user[0].email,
-      role: user[0].role,
-    },
-  });
 }

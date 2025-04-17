@@ -16,106 +16,133 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
 
   const renderPAN = () => (
     <>
-      <div> <strong>PAN Number:</strong> {resultData.pan_number || 'N/A'}</div>
-      <div> <strong>Full Name:</strong> {resultData.full_name || 'N/A'}</div>
-      <div> <strong>Gender:</strong> {resultData.gender || 'N/A'}</div>
+      <div><strong>PAN Number:</strong> {resultData.pan_number || 'N/A'}</div>
+      <div><strong>Full Name:</strong> {resultData.full_name || 'N/A'}</div>
+      <div><strong>Gender:</strong> {resultData.gender || 'N/A'}</div>
       <div><strong>Date of Birth:</strong> {resultData.dob || 'N/A'}</div>
-      <div> <strong>Masked Aadhaar:</strong> {resultData.masked_aadhaar || 'N/A'}</div>
-      <div> <strong>Aadhaar Linked:</strong> {resultData.aadhaar_linked ? 'Yes' : 'No'}</div>
+      <div><strong>Masked Aadhaar:</strong> {resultData.masked_aadhaar || 'N/A'}</div>
+      <div><strong>Aadhaar Linked:</strong> {resultData.aadhaar_linked ? 'Yes' : 'No'}</div>
       <div><strong>Category:</strong> {resultData.category || 'N/A'}</div>
     </>
   );
 
   const renderAadhaar = () => (
     <>
-      <div><strong>Aadhaar Number:</strong> {resultData.aadhaar_number || 'N/A'}</div>
-      <div> <strong>Name:</strong> {resultData.name || 'N/A'}</div>
-      <div> <strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
-      <div> <strong>Gender:</strong> {resultData.gender || 'N/A'}</div>
-      <div> <strong>Address:</strong> {resultData.address?.full || 'N/A'}</div>
+      <div><strong>Masked Number:</strong> {resultData.maskedNumber || 'N/A'}</div>
+      <div><strong>Name:</strong> {resultData.name || 'N/A'}</div>
+      <div><strong>DOB:</strong> {resultData.dateOfBirth || 'N/A'}</div>
+      <div><strong>Gender:</strong> {resultData.gender || 'N/A'}</div>
+      <div>
+  <strong>Address:</strong>{" "}
+  {resultData.address
+    ? `${resultData.address.locality || ''}, ${resultData.address.district || ''}, ${resultData.address.state || ''} - ${resultData.address.pin || ''}`
+    : 'N/A'}
+</div>
+      {resultData.photo && (
+        <div>
+          <strong>Photo:</strong><br />
+          <img
+            src={`data:image/jpeg;base64,${resultData.photo}`}
+            alt="Aadhaar Holder"
+            className="mt-2 rounded-md shadow w-32 h-32 object-cover"
+          />
+        </div>
+      )}
     </>
   );
+  
 
   const renderCIN = () => (
     <>
-      <div> <strong>CIN:</strong> {resultData.cin || 'N/A'}</div>
-      <div> <strong>Company Name:</strong> {resultData.company_name || 'N/A'}</div>
-      <div> <strong>Incorporation Date:</strong> {resultData.date_of_incorporation || 'N/A'}</div>
-      <div> <strong>Registered Address:</strong> {resultData.registered_address || 'N/A'}</div>
-      <div> <strong>Status:</strong> {resultData.company_status || 'N/A'}</div>
+      <div><strong>CIN:</strong> {resultData.cin || 'N/A'}</div>
+      <div><strong>Company Name:</strong> {resultData.company_name || 'N/A'}</div>
+      <div><strong>Incorporation Date:</strong> {resultData.date_of_incorporation || 'N/A'}</div>
+      <div><strong>Registered Address:</strong> {resultData.registered_address || 'N/A'}</div>
+      <div><strong>Status:</strong> {resultData.company_status || 'N/A'}</div>
     </>
   );
 
   const renderGST = () => (
     <>
-      <div> <strong>GSTIN:</strong> {resultData.gstin || 'N/A'}</div>
-      <div> <strong>Legal Name:</strong> {resultData.legal_name || 'N/A'}</div>
-      <div> <strong>Trade Name:</strong> {resultData.trade_name || 'N/A'}</div>
-      <div> <strong>Address:</strong> {resultData.address || 'N/A'}</div>
-      <div> <strong>Status:</strong> {resultData.status || 'N/A'}</div>
+      <div><strong>GSTIN:</strong> {resultData.gstin || 'N/A'}</div>
+      <div><strong>Legal Name:</strong> {resultData.legal_name || 'N/A'}</div>
+      <div><strong>Trade Name:</strong> {resultData.trade_name || 'N/A'}</div>
+      <div><strong>Address:</strong> {resultData.address || 'N/A'}</div>
+      <div><strong>Status:</strong> {resultData.status || 'N/A'}</div>
     </>
   );
 
   const renderDL = () => (
     <>
-      <div> <strong>DL Number:</strong> {resultData.dl_number || 'N/A'}</div>
-      <div> <strong>Name:</strong> {resultData.name || 'N/A'}</div>
-      <div> <strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
-      <div> <strong>Address:</strong> {resultData.address || 'N/A'}</div>
-      <div> <strong>Validity:</strong> {resultData.validity || 'N/A'}</div>
+      <div><strong>DL Number:</strong> {resultData.dl_number || 'N/A'}</div>
+      <div><strong>Name:</strong> {resultData.name || 'N/A'}</div>
+      <div><strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
+      <div><strong>Address:</strong> {resultData.address || 'N/A'}</div>
+      <div><strong>Validity:</strong> {resultData.validity || 'N/A'}</div>
     </>
   );
 
   const renderFSSAI = () => (
     <>
-      <div> <strong>License Number:</strong> {resultData.license_number || 'N/A'}</div>
-      <div> <strong>Business Name:</strong> {resultData.business_name || 'N/A'}</div>
+      <div><strong>License Number:</strong> {resultData.license_number || 'N/A'}</div>
+      <div><strong>Business Name:</strong> {resultData.business_name || 'N/A'}</div>
       <div><strong>Address:</strong> {resultData.address || 'N/A'}</div>
-      <div> <strong>Validity:</strong> {resultData.valid_upto || 'N/A'}</div>
+      <div><strong>Validity:</strong> {resultData.valid_upto || 'N/A'}</div>
     </>
   );
 
   const renderShopact = () => (
     <>
-      <div> <strong>License Number:</strong> {resultData.license_number || 'N/A'}</div>
-      <div> <strong>Owner Name:</strong> {resultData.owner_name || 'N/A'}</div>
-      <div> <strong>Business Address:</strong> {resultData.address || 'N/A'}</div>
+      <div><strong>License Number:</strong> {resultData.license_number || 'N/A'}</div>
+      <div><strong>Owner Name:</strong> {resultData.owner_name || 'N/A'}</div>
+      <div><strong>Business Address:</strong> {resultData.address || 'N/A'}</div>
     </>
   );
 
   const renderUdyam = () => (
     <>
-      <div> <strong>Udyam Number:</strong> {resultData.udyam_number || 'N/A'}</div>
-      <div> <strong>Enterprise Name:</strong> {resultData.enterprise_name || 'N/A'}</div>
-      <div> <strong>Address:</strong> {resultData.address || 'N/A'}</div>
-      <div> <strong>Type:</strong> {resultData.enterprise_type || 'N/A'}</div>
+      <div><strong>Udyam Number:</strong> {resultData.udyam_number || 'N/A'}</div>
+      <div><strong>Enterprise Name:</strong> {resultData.enterprise_name || 'N/A'}</div>
+      <div><strong>Address:</strong> {resultData.address || 'N/A'}</div>
+      <div><strong>Type:</strong> {resultData.enterprise_type || 'N/A'}</div>
     </>
   );
 
   const renderVoter = () => (
     <>
-      <div> <strong>Voter ID:</strong> {resultData.voter_id || 'N/A'}</div>
-      <div> <strong>Name:</strong> {resultData.name || 'N/A'}</div>
-      <div> <strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
-      <div> <strong>Gender:</strong> {resultData.gender || 'N/A'}</div>
-      <div> <strong>Address:</strong> {resultData.address || 'N/A'}</div>
+      <div><strong>Voter ID:</strong> {resultData.voter_id || 'N/A'}</div>
+      <div><strong>Name:</strong> {resultData.name || 'N/A'}</div>
+      <div><strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
+      <div><strong>Gender:</strong> {resultData.gender || 'N/A'}</div>
+      <div><strong>Address:</strong> {resultData.address || 'N/A'}</div>
     </>
   );
 
   const renderPassport = () => (
     <>
-      <div> <strong>Passport Number:</strong> {resultData.passport_number || 'N/A'}</div>
-      <div> <strong>Name:</strong> {resultData.name || 'N/A'}</div>
-      <div> <strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
-      <div> <strong>Address:</strong> {resultData.address || 'N/A'}</div>
+      <div><strong>Passport Number:</strong> {resultData.passport_number || 'N/A'}</div>
+      <div><strong>Name:</strong> {resultData.name || 'N/A'}</div>
+      <div><strong>DOB:</strong> {resultData.dob || 'N/A'}</div>
+      <div><strong>Address:</strong> {resultData.address || 'N/A'}</div>
+      {resultData.photo && (
+        <div>
+          <strong>Photo:</strong><br />
+          <img
+            src={`data:image/jpeg;base64,${resultData.photo}`}
+            alt="Passport Holder"
+            className="mt-2 rounded-md shadow w-32 h-32 object-cover"
+          />
+        </div>
+      )}
     </>
   );
+  
 
   const renderPANLink = () => (
     <>
-      <div> <strong>PAN Number:</strong> {resultData.pan_number || 'N/A'}</div>
-      <div> <strong>Linking Status:</strong> {resultData.linked_status || 'N/A'}</div>
-      <div> <strong>Last Updated:</strong> {resultData.last_updated || 'N/A'}</div>
+      <div><strong>Message:</strong> {resultData.message || 'N/A'}</div>
+      {/* <div><strong>Linking Status:</strong> {resultData.linked_status || 'N/A'}</div>
+      <div><strong>Last Updated:</strong> {resultData.last_updated || 'N/A'}</div> */}
     </>
   );
 
@@ -123,8 +150,8 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
     <>
       {Object.entries(resultData).map(([key, value]) => (
         <div key={key}>
-           <strong>{key.replace(/_/g, ' ')}:</strong>{' '}
-          {typeof value === 'object' ? JSON.stringify(value) : value?.toString() || 'N/A'}
+          <strong>{key.replace(/_/g, ' ')}:</strong>{' '}
+          {typeof value === 'object' ? JSON.stringify(value, null, 2) : value?.toString() || 'N/A'}
         </div>
       ))}
     </>
@@ -134,7 +161,7 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
     switch (type) {
       case 'pan':
         return renderPAN();
-      case 'aadhaar':
+      case 'aadhar': // corrected from "aadhar"
         return renderAadhaar();
       case 'cin':
         return renderCIN();
@@ -152,7 +179,7 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
         return renderVoter();
       case 'passport':
         return renderPassport();
-      case 'pan_aadhaar':
+      case 'pan-aadhaar-link':
         return renderPANLink();
       default:
         return renderGeneric();
@@ -160,9 +187,9 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
   };
 
   return (
-    <div className="p-4 bg-white shadow rounded-xl space-y-2 text-gray-800">
+    <div className="p-4 bg-white shadow rounded-xl space-y-2 text-gray-800 w-[700px]">
       <h2 className="text-lg font-bold mb-2">
-        ✅ {(type || 'UNKNOWN').replace(/_/g, ' ').toUpperCase()} Verification Result
+        {(type || 'UNKNOWN').replace(/_/g, ' ').toUpperCase()} Verification Result
       </h2>
       {renderContentByType()}
     </div>
