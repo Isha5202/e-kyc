@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: {
     template: "%s | NAMCO",
     default: "NAMCO",
+  }, 
+  icons: {
+    icon: '/favicon.ico',
   },
   description:
     "Next.js admin dashboard toolkit with 200+ templates, UI components, and integrations for fast dashboard development.",

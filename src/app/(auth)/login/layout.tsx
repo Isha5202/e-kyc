@@ -6,6 +6,9 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "NAMCO",
+  icons: {
+    icon: '/favicon.ico',
+  },
   description: "Login to access the NextAdmin dashboard.",
 };
 

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, integer, timestamp } from 'drizzle-orm/pg-core';
 
 export const settings = pgTable('settings', {
   id: serial('id').primaryKey(),
@@ -14,4 +14,11 @@ export const users = pgTable('users', {
   email: text('email').notNull(),
   password_hash: text('password_hash').notNull(), // ✅ this must match the DB column name
   role: text('role'),
+});
+
+export const refreshTokens = pgTable('refresh_tokens', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  token: text('token').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
 });

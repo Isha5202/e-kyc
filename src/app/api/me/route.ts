@@ -29,7 +29,7 @@ export async function GET() {
     return NextResponse.json({ name, email, role });
 
   } catch (err) {
-    console.error('[API /me] Error:', err);
+    // console.error('[API /me] Error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createJWT, setAuthCookie } from '@/lib/auth';
-import pool from '@/lib/db'; // Your pg pool
+import pool from '@/lib/db';
+import { randomUUID } from 'crypto';
+import { add } from 'date-fns';
+import { db } from '@/lib/db';
+import { refreshTokens } from '@/lib/schema'; // You must define this schema like we discussed
 
 export async function POST(req: Request) {
-  console.log('[POST /api/login] Login request received');
   const body = await req.json();
-  console.log('[POST /api/login] Parsed body:', body);
-
   const { email, password } = body;
 
   try {
@@ -20,32 +21,44 @@ export async function POST(req: Request) {
     const user = result.rows[0];
 
     if (!user || user.password_hash !== password) {
-      console.warn('[POST /api/login] Invalid credentials');
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    console.log('[POST /api/login] User found:', user);
-
-    const token = await createJWT({
+    const accessToken = await createJWT({
       id: user.id,
       email: user.email,
       role: user.role,
     });
 
-    console.log('[POST /api/login] JWT created:', token);
+    // Generate refresh token
+    const refreshToken = randomUUID();
+    const refreshExpires = add(new Date(), { days: 30 });
 
-    // Create a response and set cookie directly on it
-    const response = NextResponse.json({
-      success: true,
-      role: user.role, // ⬅️ Return role for client redirect
+    // Store refresh token in DB
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: refreshExpires,
     });
 
-    setAuthCookie(token, response); // ⬅️ This mutates the response
-    console.log('[POST /api/login] Auth cookie set');
+    const response = NextResponse.json({
+      success: true,
+      role: user.role,
+    });
+
+    // Set access token
+    setAuthCookie(accessToken, response);
+
+    // Set refresh token in cookie
+    response.cookies.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
 
     return response;
   } catch (error) {
-    console.error('[POST /api/login] Error during login:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
