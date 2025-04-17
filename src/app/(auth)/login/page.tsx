@@ -5,12 +5,12 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="w-[500px] bg-white p-6 rounded-lg shadow-md">
-        <div className="flex justify-center">
+        <div className="flex justify-center items-center">
           <Image
             src="/images/logo/namcobank-logo.svg"
             alt="Namco Bank Logo"
-            width={100}
-            height={25}
+            width={150}
+            height={45}
             priority
           />
         </div>

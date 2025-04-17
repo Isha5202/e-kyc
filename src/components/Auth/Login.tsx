@@ -73,9 +73,7 @@ export default function Login() {
   
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-10 p-6 bg-white ">
-
-
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto  bg-white ">
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       <InputGroup
@@ -97,13 +95,15 @@ export default function Login() {
         className="mb-4"
       />
 
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-        disabled={loading}
-      >
-        {loading ? 'Logging in...' : 'Login'}
-      </button>
+<div className="flex justify-center">
+  <button
+    type="submit"
+    className="w-[100px] mt-4 bg-blue-900 text-white py-2 px-4 rounded hover:bg-blue-800"
+    disabled={loading}
+  >
+    {loading ? 'Logging in...' : 'Login'}
+  </button>
+</div>
     </form>
   );
 }
