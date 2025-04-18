@@ -98,7 +98,7 @@ export default function Login() {
 <div className="flex justify-center">
   <button
     type="submit"
-    className="w-[100px] mt-4 bg-blue-900 text-white py-2 px-4 rounded hover:bg-blue-800"
+    className="w-[180px] mt-4 bg-blue-900 text-white py-2 px-4 rounded hover:bg-blue-800"
     disabled={loading}
   >
     {loading ? 'Logging in...' : 'Login'}
