@@ -38,7 +38,7 @@ export default function EKYCForm() {
   const handleSubmit = async (e: React.FormEvent, type: string) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
       if (type === "aadhar") {
         if (aadhaarStep === 1) {
@@ -48,6 +48,7 @@ export default function EKYCForm() {
             body: JSON.stringify({
               type,
               aadhaar_number: formData.aadhaar_number,
+              input_value: formData.aadhaar_number, // Added input_value here
             }),
           });
           const data = await res.json();
@@ -63,6 +64,7 @@ export default function EKYCForm() {
               otp,
               txnId,
               reference_id: referenceId,
+              input_value: formData.aadhaar_number, // Added input_value here
             }),
           });
           const data = await res.json();
@@ -77,7 +79,11 @@ export default function EKYCForm() {
         const res = await fetch("/api/kyc", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type, ...formData }),
+          body: JSON.stringify({
+            type,
+            ...formData,
+            input_value: formData[type], // Added input_value dynamically here
+          }),
         });
         const data = await res.json();
         setResults((prev) => ({ ...prev, [type]: data }));
@@ -88,7 +94,7 @@ export default function EKYCForm() {
       setLoading(false);
     }
   };
-
+  
   const handleTabChange = (index: number) => {
     setSelectedIndex(index);
     setFormData({});
@@ -107,7 +113,10 @@ export default function EKYCForm() {
             name="aadhaar_number"
             placeholder="Enter Aadhaar Number"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value to formData
+            }}
             required
           />
         );
@@ -122,14 +131,17 @@ export default function EKYCForm() {
               name="otp"
               placeholder="Enter OTP"
               type="text"
-              handleChange={(e) => setOtp(e.target.value)}
+              handleChange={(e) => {
+                setOtp(e.target.value);
+               
+              }}
               required
             />
           </>
         );
       }
     }
-
+  
     switch (type) {
       case "pan":
         return (
@@ -138,7 +150,10 @@ export default function EKYCForm() {
             name="pan_number"
             placeholder="Enter PAN Number"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value for PAN
+            }}
             required
           />
         );
@@ -149,7 +164,10 @@ export default function EKYCForm() {
             name="cin"
             placeholder="Enter CIN"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value for CIN
+            }}
             required
           />
         );
@@ -160,7 +178,10 @@ export default function EKYCForm() {
             name="gstin"
             placeholder="Enter GSTIN"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value for GSTIN
+            }}
             required
           />
         );
@@ -172,7 +193,10 @@ export default function EKYCForm() {
               name="rc_number"
               placeholder="Enter DL Number"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for DL
+              }}
               required
             />
             <InputGroup
@@ -180,7 +204,10 @@ export default function EKYCForm() {
               name="dob"
               placeholder="YYYY-MM-DD"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for DOB
+              }}
               required
             />
           </>
@@ -192,7 +219,10 @@ export default function EKYCForm() {
             name="fssai_number"
             placeholder="Enter FSSAI Number"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value for FSSAI Number
+            }}
             required
           />
         );
@@ -204,7 +234,10 @@ export default function EKYCForm() {
               name="shopact_number"
               placeholder="Enter Shopact Number"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for Shopact Number
+              }}
               required
             />
             <InputGroup
@@ -212,7 +245,10 @@ export default function EKYCForm() {
               name="state_code"
               placeholder="Enter State Code (e.g., MH)"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for State Code
+              }}
               required
             />
           </>
@@ -224,7 +260,10 @@ export default function EKYCForm() {
             name="udyam_number"
             placeholder="Enter Udyam Aadhaar Number"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value for Udyam Aadhaar
+            }}
             required
           />
         );
@@ -235,7 +274,10 @@ export default function EKYCForm() {
             name="epic_number"
             placeholder="Enter EPIC Number"
             type="text"
-            handleChange={handleChange}
+            handleChange={(e) => {
+              handleChange(e);
+              formData.input_value = e.target.value; // Add input_value for EPIC Number
+            }}
             required
           />
         );
@@ -247,7 +289,10 @@ export default function EKYCForm() {
               name="passport_number"
               placeholder="Enter Passport Number"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for Passport Number
+              }}
               required
             />
             <InputGroup
@@ -255,7 +300,10 @@ export default function EKYCForm() {
               name="dob"
               placeholder="YYYY-MM-DD"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for DOB
+              }}
               required
             />
           </>
@@ -268,7 +316,10 @@ export default function EKYCForm() {
               name="pan_number"
               placeholder="Enter PAN Number"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for PAN Number
+              }}
               required
             />
             <InputGroup
@@ -276,7 +327,10 @@ export default function EKYCForm() {
               name="aadhaar_number"
               placeholder="Enter Aadhaar Number"
               type="text"
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e);
+                formData.input_value = e.target.value; // Add input_value for Aadhaar Number
+              }}
               required
             />
           </>
@@ -285,6 +339,7 @@ export default function EKYCForm() {
         return <p>Unsupported KYC Type</p>;
     }
   };
+  
 
   // const renderResult = (data: any): JSX.Element => {
   //   if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {

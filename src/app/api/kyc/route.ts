@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDeepvueCredentials } from '../settings/utils';
+import { cookies } from 'next/headers';
+import { verifyJWT } from '@/lib/auth';
+import  pool  from '@/lib/db'; // your pg Pool instance
 
 const BASE_URL = 'https://production.deepvue.tech';
 
@@ -13,9 +16,6 @@ async function getAccessToken(): Promise<string | null> {
 
   try {
     const { client_id, client_secret } = await getDeepvueCredentials();
-console.log('🔐 Credentials:', { client_id, client_secret });
-
-
     const form = new URLSearchParams();
     form.append('client_id', client_id);
     form.append('client_secret', client_secret);
@@ -34,6 +34,18 @@ console.log('🔐 Credentials:', { client_id, client_secret });
   } catch (err) {
     console.error('❌ Token error:', err);
     return null;
+  }
+}
+
+async function logKycAttempt(userId: string, kycType: string, status: string, inputValue: string) {
+  try {
+    await pool.query(
+      'INSERT INTO kyc_logs (user_id, kyc_type, status, input_value, timestamp) VALUES ($1, $2, $3, $4, NOW())',
+      [userId, kycType, status, inputValue]
+    );
+  } catch (err) {
+    console.error('Error logging KYC attempt:', err);
+    throw new Error('Database insertion failed');
   }
 }
 
@@ -256,13 +268,22 @@ async function handleUdyam(params: any) {
   return { error: 'Verification still in progress after multiple attempts' };
 }
 
-// Main API Route
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { type, ...params } = body;
 
+    const cookieStore = cookies();
+    const token = (await cookieStore).get('token')?.value;
+
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const decoded = await verifyJWT(token);
+    const userId = decoded?.id;
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     let data;
+    let status: string = 'success'; // Default to success
 
     switch (type) {
       case 'aadhar':
@@ -304,6 +325,29 @@ export async function POST(req: NextRequest) {
       default:
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
+
+    if (data?.error || data?.message || data?.sub_code) {
+      // Use the specific message from the API response
+      status = data?.message || data?.sub_code || data?.error || 'Unknown error';
+    }
+
+    const inputValue = 
+  type === 'pan' ? params?.pan_number :
+  type === 'aadhar' ? params?.aadhaar_number :
+  type === 'dl' ? params?.rc_number :
+  type === 'voter' ? params?.epic_number :
+  type === 'passport' ? params?.file_number :
+  type === 'cin' ? params?.cin_number :
+  type === 'gst' ? params?.gstin_number :
+  type === 'fssai' ? params?.fssai_id :
+  type === 'shopact' ? params?.certificate_number :
+  type === 'udyam' ? params?.udyam_aadhaar_number :
+  'Unknown';
+    console.log("Logging KYC attempt:", { userId, type, status, inputValue });
+    await logKycAttempt(userId, type, status, inputValue);
+    
+    
+
 
     return NextResponse.json(data);
   } catch (err) {
