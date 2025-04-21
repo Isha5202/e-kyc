@@ -1,5 +1,3 @@
-// src/app/api/users/route.ts
-
 import { NextResponse } from 'next/server';
 import db from '@/lib/db'; // PostgreSQL client
 
@@ -42,6 +40,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'User created successfully' }, { status: 201 });
   } catch (error) {
     console.error('Error inserting user:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+// PATCH: Update current user's password
+import { getCurrentUser } from '@/lib/current-user';
+
+export async function PATCH(req: Request) {
+  try {
+    const { newPassword } = await req.json();
+    if (!newPassword) {
+      return NextResponse.json({ error: 'Missing new password' }, { status: 400 });
+    }
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await db.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      [newPassword, currentUser.id]
+    );
+
+    return NextResponse.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
