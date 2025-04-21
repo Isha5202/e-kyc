@@ -4,9 +4,9 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 
 // GET user by ID
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
 
     const user = await db.query.users.findFirst({
       where: eq(users.id, id),
@@ -24,9 +24,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // PUT update user by ID
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
     const { name, email, password } = await req.json();
 
     const updates: {
