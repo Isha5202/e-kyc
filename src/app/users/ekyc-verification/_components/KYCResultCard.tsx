@@ -143,7 +143,7 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
 
   const renderRow = (label: string, value: string | React.ReactNode) => (
     <tr key={label}>
-      <td className="font-semibold pr-4 align-top">{label}</td>
+      <td className="font-semibold pr-4 align-top w-[250px]">{label}</td>
       <td>{value || 'N/A'}</td>
     </tr>
   );

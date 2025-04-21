@@ -47,6 +47,81 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// function generateHTML(type: string, data: any, userName: string): string {
+//   const resultData = data?.data || data || {};
+
+//   const rows = Object.entries(resultData)
+//     .map(([key, value]) => {
+//       const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+//       let formattedValue;
+
+//       if (typeof value === 'string' && value.startsWith('data:image')) {
+//         formattedValue = `<img src="${value}" alt="${formattedKey}" style="max-height: 150px; border: 1px solid #ccc; padding: 4px;" />`;
+//       } else if (typeof value === 'object') {
+//         formattedValue = `<pre style="white-space: pre-wrap; background: #f0f0f0; padding: 5px; border-radius: 4px;">${JSON.stringify(value, null, 2)}</pre>`;
+//       } else {
+//         formattedValue = value || 'N/A';
+//       }
+
+//       return `<tr><td><strong>${formattedKey}</strong></td><td>${formattedValue}</td></tr>`;
+//     })
+//     .join('');
+
+//   return `<!DOCTYPE html>
+// <html>
+//   <head>
+//     <meta charset="utf-8" />
+//     <title>${type.toUpperCase()} Verification Report</title>
+//     <style>
+//       body {
+//         font-family: 'Arial', sans-serif;
+//         padding: 20px;
+//         color: #333;
+//         position: relative;
+//       }
+//       h1 {
+//         text-align: center;
+//         color: #2c3e50;
+//         font-size: 24px;
+//         margin-bottom: 20px;
+//       }
+//       table {
+//         width: 100%;
+//         border-collapse: collapse;
+//       }
+//       td {
+//         padding: 8px 12px;
+//         vertical-align: top;
+//         border-bottom: 1px solid #ddd;
+//       }
+//       tr:nth-child(even) {
+//         background-color: #f9f9f9;
+//       }
+//       pre {
+//         margin: 0;
+//         font-size: 13px;
+//       }
+//       .footer {
+//         position: fixed;
+//         bottom: 30px;
+//         width: 100%;
+//         font-size: 14px;
+//         color: #000;
+//       }
+//     </style>
+//   </head>
+//   <body>
+//     <h1>${type.toUpperCase()} Verification Report</h1>
+//     <table>
+//       ${rows}
+//     </table>
+//     <div class="footer">
+//       Digitally Generated • ${userName}
+//     </div>
+//   </body>
+// </html>`;
+// }
 function generateHTML(type: string, data: any, userName: string): string {
   const resultData = data?.data || data || {};
 
@@ -57,67 +132,104 @@ function generateHTML(type: string, data: any, userName: string): string {
       let formattedValue;
 
       if (typeof value === 'string' && value.startsWith('data:image')) {
-        formattedValue = `<img src="${value}" alt="${formattedKey}" style="max-height: 150px; border: 1px solid #ccc; padding: 4px;" />`;
+        formattedValue = `<img src="${value}" alt="${formattedKey}" style="max-height: 120px; border-radius: 8px; border: 1px solid #ccc; padding: 4px;" />`;
       } else if (typeof value === 'object') {
-        formattedValue = `<pre style="white-space: pre-wrap; background: #f0f0f0; padding: 5px; border-radius: 4px;">${JSON.stringify(value, null, 2)}</pre>`;
+        formattedValue = `<pre>${JSON.stringify(value, null, 2)}</pre>`;
       } else {
         formattedValue = value || 'N/A';
       }
 
-      return `<tr><td><strong>${formattedKey}</strong></td><td>${formattedValue}</td></tr>`;
+      return `
+        <tr>
+          <td class="label">${formattedKey}</td>
+          <td class="value">${formattedValue}</td>
+        </tr>`;
     })
     .join('');
 
   return `<!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <title>${type.toUpperCase()} Verification Report</title>
+    <meta charset="UTF-8" />
+    <title>${type.toUpperCase()} Report</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
-        font-family: 'Arial', sans-serif;
-        padding: 20px;
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 40px;
+        background: #f7f9fc;
         color: #333;
-        position: relative;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 12px;
       }
       h1 {
         text-align: center;
         color: #2c3e50;
-        font-size: 24px;
-        margin-bottom: 20px;
+        font-size: 26px;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
       }
+        h3{
+        text-align: center;
+        }
       table {
         width: 100%;
         border-collapse: collapse;
       }
       td {
-        padding: 8px 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid #eaeaea;
         vertical-align: top;
-        border-bottom: 1px solid #ddd;
+        font-size: 14px;
       }
-      tr:nth-child(even) {
-        background-color: #f9f9f9;
+      td.label {
+        background: #f1f3f5;
+        font-weight: 600;
+        width: 30%;
+        color: #333;
+      }
+      tr:last-child td {
+        border-bottom: none;
       }
       pre {
-        margin: 0;
+        background: #f0f4f8;
+        padding: 10px;
+        border-radius: 6px;
         font-size: 13px;
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
       .footer {
-        position: fixed;
-        bottom: 30px;
-        width: 100%;
-        font-size: 14px;
+        margin-top: 40px;
+        font-size: 13px;
         color: #000;
+      }
+      img {
+        max-width: 100%;
+        border-radius: 6px;
       }
     </style>
   </head>
   <body>
-    <h1>${type.toUpperCase()} Verification Report</h1>
-    <table>
-      ${rows}
-    </table>
-    <div class="footer">
-      Digitally Generated • ${userName}
+    <div class="container">
+    <h1>The Nashik Merchants Co-operative Bank Ltd, Nashik</h1>
+      <h3>${type.toUpperCase()} Verification Report</h3>
+      <table>
+        ${rows}
+      </table>
+      <div class="footer">
+        Digitally Generated by <strong>${userName}</strong>
+      </div>
     </div>
   </body>
 </html>`;
