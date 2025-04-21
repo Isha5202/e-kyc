@@ -1,38 +1,49 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db'; // update if different
 import { users } from '@/lib/schema'; // update if different
 
-export async function GET(request:Request,{params}:{params:{id:any}}) {
-  try {
-    const {id} = params;
 
-    // Check if id is a valid number
-    if (isNaN(id)) {
-      return new Response(JSON.stringify({ message: 'Invalid ID' }), {
-        status: 400,
-      });
+// This function will handle GET requests for a dynamic route like `/api/users/[id]`
+
+// This function will handle GET requests for a dynamic route like `/api/users/[id]`
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+
+    // Convert the id to a number before passing it to the query
+    const numericId = Number(id);
+
+    // Ensure the ID is a valid number
+    if (isNaN(numericId)) {
+      return new NextResponse(
+        JSON.stringify({ message: 'Invalid ID' }),
+        { status: 400 }
+      );
     }
 
+    // Query the PostgreSQL database to find the user by ID
     const result = await db
       .select()
       .from(users)
-      .where(eq(users.id, id));
+      .where(eq(users.id, numericId)); // Pass numericId to eq instead of the string id
 
     const user = result[0];
 
     if (!user) {
-      return new Response(JSON.stringify({ message: 'User not found' }), {
-        status: 404,
-      });
+      return new NextResponse(
+        JSON.stringify({ message: 'User not found' }),
+        { status: 404 }
+      );
     }
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new NextResponse(JSON.stringify(user), { status: 200 });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ message: 'Internal Server Error' }), {
-      status: 500,
-    });
+    return new NextResponse(
+      JSON.stringify({ message: 'Internal Server Error' }),
+      { status: 500 }
+    );
   }
 }
 
