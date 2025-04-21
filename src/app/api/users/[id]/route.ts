@@ -2,9 +2,9 @@ import { NextRequest } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db'; // update if different
 import { users } from '@/lib/schema'; // update if different
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: number } }) {
   try {
-    const id = Number(context.params.id);
+    const id = context.params.id;
 
     // Check if id is a valid number
     if (isNaN(id)) {
