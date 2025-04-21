@@ -4,24 +4,29 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 
 // GET user by ID
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const id = Number(params.id);
 
-const {id} = params;
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
 
-console.log("id",id);
+    if (!user) {
+      return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
+    }
 
+    return new Response(JSON.stringify(user), { status: 200 });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+  }
 }
 
-
-
-
 // PUT update user by ID
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = Number(context.params.id);
+    const id = Number(params.id);
     const { name, email, password } = await req.json();
 
     const updates: {
