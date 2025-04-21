@@ -6,22 +6,22 @@ import { ShowcaseSection } from '@/components/Layouts/showcase-section';
 import { Lock } from 'lucide-react';
 
 const ChangePasswordForm = () => {
-  const [current, setCurrent] = useState('');
+
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [result, setResult] = useState('');
 
   const handleChange = () => {
     if (newPassword !== confirm) {
-      alert('❌ Passwords do not match');
+      alert(' Passwords do not match');
       return;
     }
 
-    setResult('✅ Password changed successfully!');
+    setResult(' Password changed successfully!');
 
     // Reset fields after a delay
     setTimeout(() => {
-      setCurrent('');
+
       setNewPassword('');
       setConfirm('');
       setResult('');
@@ -32,17 +32,7 @@ const ChangePasswordForm = () => {
     <div className="mx-auto w-full">
       <ShowcaseSection title="Change Password" className="!p-6.5">
         <form className="space-y-6">
-          <InputGroup
-            label="Current Password"
-            placeholder="Enter your current password"
-            type="password"
-            value={current}
-            handleChange={(e) => setCurrent(e.target.value)}
-            required
-            icon={<Lock size={18} />}
-            iconPosition="left"
-            className="w-[800px]"
-          />
+         
 
           <InputGroup
             label="New Password"

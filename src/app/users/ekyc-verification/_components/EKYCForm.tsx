@@ -48,7 +48,7 @@ export default function EKYCForm() {
             body: JSON.stringify({
               type,
               aadhaar_number: formData.aadhaar_number,
-              input_value: formData.aadhaar_number, // Added input_value here
+            
             }),
           });
           const data = await res.json();
@@ -64,7 +64,7 @@ export default function EKYCForm() {
               otp,
               txnId,
               reference_id: referenceId,
-              input_value: formData.aadhaar_number, // Added input_value here
+         
             }),
           });
           const data = await res.json();
@@ -82,7 +82,7 @@ export default function EKYCForm() {
           body: JSON.stringify({
             type,
             ...formData,
-            input_value: formData[type], // Added input_value dynamically here
+
           }),
         });
         const data = await res.json();
@@ -96,13 +96,25 @@ export default function EKYCForm() {
   };
   
   const handleTabChange = (index: number) => {
+    const newType = ekycTypes[index].id;
+  
     setSelectedIndex(index);
     setFormData({});
     setAadhaarStep(1);
     setOtp("");
     setTxnId("");
     setReferenceId("");
+  
+    // Clear result for the newly selected type
+    setResults((prev) => {
+      const updated = { ...prev };
+      if (updated[newType]) {
+        delete updated[newType];
+      }
+      return updated;
+    });
   };
+  
 
   const renderFormFields = (type: string) => {
     if (type === "aadhar") {
@@ -115,7 +127,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value to formData
+           
             }}
             required
           />
@@ -152,7 +164,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value for PAN
+        
             }}
             required
           />
@@ -166,7 +178,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value for CIN
+         
             }}
             required
           />
@@ -180,7 +192,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value for GSTIN
+           
             }}
             required
           />
@@ -195,7 +207,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for DL
+              
               }}
               required
             />
@@ -206,7 +218,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for DOB
+              
               }}
               required
             />
@@ -221,7 +233,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value for FSSAI Number
+            
             }}
             required
           />
@@ -236,7 +248,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for Shopact Number
+              
               }}
               required
             />
@@ -247,7 +259,6 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for State Code
               }}
               required
             />
@@ -262,7 +273,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value for Udyam Aadhaar
+
             }}
             required
           />
@@ -276,7 +287,7 @@ export default function EKYCForm() {
             type="text"
             handleChange={(e) => {
               handleChange(e);
-              formData.input_value = e.target.value; // Add input_value for EPIC Number
+
             }}
             required
           />
@@ -291,7 +302,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for Passport Number
+
               }}
               required
             />
@@ -302,7 +313,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for DOB
+
               }}
               required
             />
@@ -318,7 +329,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for PAN Number
+
               }}
               required
             />
@@ -329,7 +340,7 @@ export default function EKYCForm() {
               type="text"
               handleChange={(e) => {
                 handleChange(e);
-                formData.input_value = e.target.value; // Add input_value for Aadhaar Number
+
               }}
               required
             />

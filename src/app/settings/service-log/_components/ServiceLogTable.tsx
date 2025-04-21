@@ -12,7 +12,6 @@ interface KYCLog {
   userName: string;
   userEmail: string;
   kycType: string;
-  inputValue: string;
   status: string;
   timestamp: string;
 }
@@ -31,11 +30,6 @@ const rawColumns = [
   {
     name: 'Verification Type',
     selector: (row: KYCLog) => row.kycType,
-    sortable: true,
-  },
-  {
-    name: 'Input Number',
-    selector: (row: KYCLog) => row.inputValue,
     sortable: true,
   },
   {
@@ -88,7 +82,6 @@ export default function ServiceLogTable() {
       (log.userName || '').toLowerCase().includes(query) ||
       (log.userEmail || '').toLowerCase().includes(query) ||
       (log.kycType || '').toLowerCase().includes(query) ||
-      (log.inputValue || '').toLowerCase().includes(query) ||
       (log.status || '').toLowerCase().includes(query)
     );
     setFilteredLogs(filtered);

@@ -12,7 +12,6 @@ export async function GET() {
         userName: users.name,
         userEmail: users.email,
         kycType: kycLogs.kycType,
-        inputValue: kycLogs.inputValue, // Added inputValue
         status: kycLogs.status,
         timestamp: kycLogs.timestamp,
       })

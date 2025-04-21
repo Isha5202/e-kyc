@@ -37,11 +37,11 @@ async function getAccessToken(): Promise<string | null> {
   }
 }
 
-async function logKycAttempt(userId: string, kycType: string, status: string, inputValue: string) {
+async function logKycAttempt(userId: string, kycType: string, status: string, ) {
   try {
     await pool.query(
-      'INSERT INTO kyc_logs (user_id, kyc_type, status, input_value, timestamp) VALUES ($1, $2, $3, $4, NOW())',
-      [userId, kycType, status, inputValue]
+      'INSERT INTO kyc_logs (user_id, kyc_type, status,  timestamp) VALUES ($1, $2, $3, $4, NOW())',
+      [userId, kycType, status ]
     );
   } catch (err) {
     console.error('Error logging KYC attempt:', err);
@@ -331,20 +331,9 @@ export async function POST(req: NextRequest) {
       status = data?.message || data?.sub_code || data?.error || 'Unknown error';
     }
 
-    const inputValue = 
-  type === 'pan' ? params?.pan_number :
-  type === 'aadhar' ? params?.aadhaar_number :
-  type === 'dl' ? params?.rc_number :
-  type === 'voter' ? params?.epic_number :
-  type === 'passport' ? params?.file_number :
-  type === 'cin' ? params?.cin_number :
-  type === 'gst' ? params?.gstin_number :
-  type === 'fssai' ? params?.fssai_id :
-  type === 'shopact' ? params?.certificate_number :
-  type === 'udyam' ? params?.udyam_aadhaar_number :
-  'Unknown';
-    console.log("Logging KYC attempt:", { userId, type, status, inputValue });
-    await logKycAttempt(userId, type, status, inputValue);
+
+    console.log("Logging KYC attempt:", { userId, type, status});
+    await logKycAttempt(userId, type, status);
     
     
 

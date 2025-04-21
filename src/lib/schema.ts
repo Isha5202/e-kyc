@@ -1,3 +1,5 @@
+//src\lib\schema.ts
+
 import { pgTable, text, serial, integer, timestamp } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm'; // required for table relationships
 
@@ -31,7 +33,6 @@ export const kycLogs = pgTable('kyc_logs', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull(),
   kycType: text('kyc_type').notNull(),
-  inputValue: text('input_value'), // <- Add this line to store input like Aadhaar or PAN
   status: text('status').notNull(),
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow(),
 });
