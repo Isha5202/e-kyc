@@ -37,12 +37,13 @@ async function getAccessToken(): Promise<string | null> {
   }
 }
 
-async function logKycAttempt(userId: string, kycType: string, status: string, ) {
+async function logKycAttempt(userId: string, kycType: string, status: string ) {
   try {
     await pool.query(
-      'INSERT INTO kyc_logs (user_id, kyc_type, status,  timestamp) VALUES ($1, $2, $3, $4, NOW())',
-      [userId, kycType, status ]
+      'INSERT INTO kyc_logs (user_id, kyc_type, status, timestamp) VALUES ($1, $2, $3, NOW())',
+      [userId, kycType, status]
     );
+    
   } catch (err) {
     console.error('Error logging KYC attempt:', err);
     throw new Error('Database insertion failed');
