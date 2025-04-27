@@ -6,6 +6,23 @@ import  pool  from '@/lib/db'; // your pg Pool instance
 
 const BASE_URL = 'https://production.deepvue.tech';
 
+// Add type labels
+const typeLabels: Record<string, string> = {
+  aadhar: 'Aadhaar',
+  'aadhar-verify': 'Aadhaar OTP Verify',
+  pan: 'PAN Card',
+  'pan-aadhaar-link': 'PAN-Aadhaar Link Status',
+  dl: 'Driving License',
+  voter: 'Voter ID',
+  passport: 'Passport',
+  cin: 'CIN (Corporate Identification Number)',
+  gst: 'GSTIN',
+  fssai: 'FSSAI License',
+  shopact: 'Shop Act Certificate',
+  udyam: 'Udyam Registration',
+  
+};
+
 let cachedToken: { token: string; fetchedAt: number } | null = null;
 
 async function getAccessToken(): Promise<string | null> {
@@ -27,6 +44,7 @@ async function getAccessToken(): Promise<string | null> {
 
     const data = await res.json();
     if (data.access_token) {
+      
       cachedToken = { token: data.access_token, fetchedAt: now };
       return data.access_token;
     }
@@ -37,17 +55,12 @@ async function getAccessToken(): Promise<string | null> {
   }
 }
 
-async function logKycAttempt(userId: string, kycType: string, status: string ) {
-  try {
-    await pool.query(
-      'INSERT INTO kyc_logs (user_id, kyc_type, status, timestamp) VALUES ($1, $2, $3, NOW())',
-      [userId, kycType, status]
-    );
-    
-  } catch (err) {
-    console.error('Error logging KYC attempt:', err);
-    throw new Error('Database insertion failed');
-  }
+async function logKycAttempt(userId: string | number, kycType: string, status: string) {
+  const id = userId.toString(); // normalize to string
+  await pool.query(
+    'INSERT INTO kyc_logs (user_id, kyc_type, status, timestamp) VALUES ($1, $2, $3, NOW())',
+    [id, kycType, status]
+  );
 }
 
 // Aadhaar OTP Generate
@@ -197,7 +210,8 @@ async function handlePassport(params: any) {
   const headers = await getAuthHeaders();
   if (!headers) return { error: 'Token fetch failed' };
 
-  const url = `${BASE_URL}/v1/verification/passport?file_number=${params.file_number}&dob=${params.dob}`;
+  const url = `${BASE_URL}/v1/verification/passport?file_number=${params.passport_number}&dob=${params.dob}`;
+  console.log('Passport', params);
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
@@ -206,7 +220,8 @@ async function handleCIN(params: any) {
   const headers = await getAuthHeaders();
   if (!headers) return { error: 'Token fetch failed' };
 
-  const url = `${BASE_URL}/v1/verification/mca/cin?id_number=${params.cin_number}`;
+  const url = `${BASE_URL}/v1/verification/mca/cin?id_number=${params.cin}`;
+  console.log('cin number', params);
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
@@ -215,7 +230,8 @@ async function handleGST(params: any) {
   const headers = await getAuthHeaders();
   if (!headers) return { error: 'Token fetch failed' };
 
-  const url = `${BASE_URL}/v1/verification/gstinlite?gstin_number=${params.gstin_number}`;
+  const url = `${BASE_URL}/v1/verification/gstinlite?gstin_number=${params.gstin}`;
+  console.log('gst number', params);
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
@@ -224,7 +240,8 @@ async function handleFSSAI(params: any) {
   const headers = await getAuthHeaders();
   if (!headers) return { error: 'Token fetch failed' };
 
-  const url = `${BASE_URL}/v1/business-compliance/fssai-verification?fssai_id=${params.fssai_id}`;
+  const url = `${BASE_URL}/v1/business-compliance/fssai-verification?fssai_id=${params.fssai_number}`;
+  console.log('fssai_number', params);
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
@@ -233,7 +250,8 @@ async function handleShopact(params: any) {
   const headers = await getAuthHeaders();
   if (!headers) return { error: 'Token fetch failed' };
 
-  const url = `${BASE_URL}/v1/business-compliance/shop-establishment-certificate?certificate_number=${params.certificate_number}&state_code=${params.state_code}`;
+  const url = `${BASE_URL}/v1/business-compliance/shop-establishment-certificate?certificate_number=${params.shopact_number}&state_code=${params.state_code}`;
+  console.log(params)
   const res = await fetch(url, { method: 'GET', headers });
   return res.json();
 }
@@ -242,7 +260,8 @@ async function handleUdyam(params: any) {
   const headers = await getAuthHeaders();
   if (!headers) return { error: 'Token fetch failed' };
 
-  const postURL = `${BASE_URL}/v1/verification/async/post-udyam-details?udyam_aadhaar_number=${params.udyam_aadhaar_number}`;
+  const postURL = `${BASE_URL}/v1/verification/async/post-udyam-details?udyam_aadhaar_number=${params.udyam_number}`; 
+  console.log('udyam_number', params);
   const postRes = await fetch(postURL, { method: 'POST', headers });
   const postData = await postRes.json();
 
@@ -332,13 +351,12 @@ export async function POST(req: NextRequest) {
       status = data?.message || data?.sub_code || data?.error || 'Unknown error';
     }
 
+  // ✅ Use label mapping for KYC type name
+  const readableType = typeLabels[type] || type;
 
-    console.log("Logging KYC attempt:", { userId, type, status});
-    await logKycAttempt(userId, type, status);
+  console.log("Logging KYC attempt:", { userId, type: readableType, status });
+  await logKycAttempt(userId, readableType, status);
     
-    
-
-
     return NextResponse.json(data);
   } catch (err) {
     console.error('❌ KYC POST error:', err);

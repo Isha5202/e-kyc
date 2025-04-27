@@ -1,30 +1,37 @@
 import "@/css/satoshi.css";
 import "@/css/style.css";
-
-import { Sidebar } from "@/components/Layouts/sidebar";
-
 import "flatpickr/dist/flatpickr.min.css";
 import "jsvectormap/dist/jsvectormap.css";
 
+import { Sidebar } from "@/components/Layouts/sidebar";
 import { Header } from "@/components/Layouts/header";
 import type { Metadata } from "next";
 import NextTopLoader from "nextjs-toploader";
 import type { PropsWithChildren } from "react";
 import { Providers } from "./providers";
+import { getTokenFromCookies, verifyJWT } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: {
     template: "%s | NAMCO",
     default: "NAMCO",
-  }, 
+  },
   icons: {
-    icon: '/favicon.ico',
+    icon: "/favicon.ico",
   },
   description:
     "Next.js admin dashboard toolkit with 200+ templates, UI components, and integrations for fast dashboard development.",
 };
 
-export default function RootLayout({ children }: PropsWithChildren) {
+export default async function RootLayout({ children }: PropsWithChildren) {
+  const token = await getTokenFromCookies();
+  const user = token ? await verifyJWT(token) : null;
+
+  if (!user || user.role !== "admin") {
+    redirect("/login");
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -34,7 +41,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <div className="flex min-h-screen">
             <Sidebar />
 
-            <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
+            <div className="w-full bg-gray-2">
               <Header />
 
               <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">

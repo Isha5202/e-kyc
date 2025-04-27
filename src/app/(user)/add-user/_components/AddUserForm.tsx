@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InputGroup from "@/components/FormElements/InputGroup";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Select } from "@/components/FormElements/select";
 
 export function AddUserForm() {
   const [formData, setFormData] = useState({
@@ -12,12 +13,32 @@ export function AddUserForm() {
     email: '',
     password: '',
     confirmPassword: '',
+    branchId: '', // Added branchId to store selected branch
   });
 
   const [error, setError] = useState('');
+  const [branches, setBranches] = useState([]); // To store branch data
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch branch data when the component mounts
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const res = await fetch('/api/branches');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        console.log('Fetched branches:', data); // Add this
+        setBranches(data);
+      } catch (err) {
+        setError('Failed to load branches');
+        console.error(err);
+      }
+    };
+  
+    fetchBranches();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -38,6 +59,7 @@ export function AddUserForm() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          branchId: formData.branchId, // Sending branchId with the request
         }),
       });
 
@@ -50,6 +72,12 @@ export function AddUserForm() {
       setError(err.message || 'Something went wrong.');
     }
   };
+
+  const branchItems = branches.map((branch: { id: string; branch_name: string; ifsc_code: string }) => ({
+    value: branch.id,
+    label: `${branch.branch_name} (${branch.ifsc_code})`,
+  }));
+  console.log('Mapped items for select:', branchItems); // Add this
 
   return (
     <div className="mx-auto w-full">
@@ -100,6 +128,17 @@ export function AddUserForm() {
               required
             />
           </div>
+
+          {/* Select box for Branch */}
+          <Select
+            label="Branch"
+            name="branchId"
+            placeholder="Select Branch"
+            value={formData.branchId}
+            handleChange={handleChange}
+            items={branchItems}
+            required
+          />
 
           {error && <p className="text-red-500">{error}</p>}
 

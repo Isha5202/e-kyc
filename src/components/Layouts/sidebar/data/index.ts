@@ -17,16 +17,18 @@ export const NAV_DATA = [
         items: [],
       },
       {
+        title: "Manage branch",
+        url: "/manage-branch",
+        icon: Icons.BranchIcon,
+        items: [],
+      },
+      {
         title: "Settings",
         icon: Icons.Settings,
         items: [
           {
             title: "API Credentials",
             url: "/settings/api-credentials",
-          },
-          {
-            title: "Balance",
-            url: "/settings/balance",
           },
           {
             title: "Service Log",

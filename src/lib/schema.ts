@@ -1,6 +1,6 @@
 //src\lib\schema.ts
 
-import { pgTable, text, serial, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, integer, timestamp, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm'; // required for table relationships
 
 //  Settings table
@@ -11,14 +11,38 @@ export const settings = pgTable('settings', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
-//  Users table
+
+export const branches = pgTable('branches', {
+  id: serial('id').primaryKey(),
+  branch_code: text('branch_code').notNull().unique(),
+  branch_name: text('branch_name').notNull(),
+  address_line1: text('address_line1').notNull(),
+  postal_code: text('postal_code'),
+  contact_number: text('contact_number'),
+  email: text('email'),
+  ifsc_code: text('ifsc_code'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+  is_active: boolean('is_active').default(true),
+});
+
+// Users table with branch_id foreign key
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull(),
   password_hash: text('password_hash').notNull(),
   role: text('role'),
+  branch_id: integer('branch_id'), // Nullable foreign key
 });
+
+//  Users relation to branch
+export const usersRelations = relations(users, ({ one }) => ({
+  branch: one(branches, {
+    fields: [users.branch_id],
+    references: [branches.id],
+  }),
+}));
 
 // Refresh Tokens table
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -37,10 +61,12 @@ export const kycLogs = pgTable('kyc_logs', {
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow(),
 });
 
-// ✅ KYC Logs relation to users
+// KYC Logs relation to users
 export const kycLogsRelations = relations(kycLogs, ({ one }) => ({
   user: one(users, {
     fields: [kycLogs.userId],
     references: [users.id],
   }),
 }));
+
+

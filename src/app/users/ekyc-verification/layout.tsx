@@ -11,12 +11,14 @@ import type { Metadata } from "next";
 import NextTopLoader from "nextjs-toploader";
 import type { PropsWithChildren } from "react";
 import { Providers } from "../providers";
+import { getTokenFromCookies, verifyJWT } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: {
     template: "%s | NAMCO",
     default: "NAMCO",
-  },
+  }, 
   icons: {
     icon: '/favicon.ico',
   },
@@ -24,7 +26,14 @@ export const metadata: Metadata = {
     "Next.js admin dashboard toolkit with 200+ templates, UI components, and integrations for fast dashboard development.",
 };
 
-export default function RootLayout({ children }: PropsWithChildren) {
+export default async function RootLayout({ children }: PropsWithChildren) {
+    const token = await getTokenFromCookies();
+    const user = token ? await verifyJWT(token) : null;
+  
+    if (!user || user.role !== "user") {
+      redirect("/login");
+    }
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body>

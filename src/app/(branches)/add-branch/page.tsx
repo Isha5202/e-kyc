@@ -1,13 +1,13 @@
 //src\app\(user)\add-user\page.tsx
 "use client"
-import { AddUserForm } from "./_components/AddUserForm";
+import { AddBranchForm } from "./_components/AddBranchForm";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export default function AddUserPage() {
   return (
     <div className="mx-auto w-full">
     <Breadcrumb pageName="Add User" />
-    <AddUserForm />;
+    <AddBranchForm />;
     </div>
   )
 }

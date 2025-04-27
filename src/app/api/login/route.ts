@@ -1,82 +1,56 @@
 import { NextResponse } from 'next/server';
 import { createJWT, setAuthCookie } from '@/lib/auth';
-import pool from '@/lib/db';
-import { randomUUID } from 'crypto';
-import { add } from 'date-fns';
 import { db } from '@/lib/db';
-import { refreshTokens } from '@/lib/schema';
+import { users } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
-  console.log('[POST /api/login] Login request received');
+  const origin = req.headers.get("origin");
 
   const body = await req.json();
   const { email, password } = body;
-
-  console.log('[POST /api/login] Parsed body:', body);
-
   try {
-    const client = await pool.connect();
-    console.log('[POST /api/login] DB client connected');
+    // Query users table to find the user by email
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1)
+      .execute();
 
-    const result = await client.query(
-      'SELECT id, email, password_hash, role FROM users WHERE email = $1',
-      [email]
-    );
-    console.log('[POST /api/login] User lookup result:', result.rows);
-
-    client.release();
-
-    const user = result.rows[0];
-
-    if (!user || user.password_hash !== password) {
-      console.warn('[POST /api/login] Invalid credentials');
+    // Check for valid user and password match
+    if (!user.length || user[0].password_hash !== password) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    console.log('[POST /api/login] Authenticated user:', user);
-
+    const authenticatedUser = user[0];
+    // Create the access token for the user
     const accessToken = await createJWT({
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      id: authenticatedUser.id,
+      email: authenticatedUser.email,
+      role: authenticatedUser.role ?? 'user',
     });
-    console.log('[POST /api/login] Access token created:', accessToken);
 
-    // Generate refresh token
-    const refreshToken = randomUUID();
-    const refreshExpires = add(new Date(), { days: 30 });
+    console.log('[POST /api/login] Access token generated:', accessToken);
 
-    console.log('[POST /api/login] Refresh token generated:', refreshToken);
+    // Set the access token in cookies using setAuthCookie
+    await setAuthCookie(accessToken); // This already sets the accessToken cookie
 
-    // Store refresh token in DB
-    await db.insert(refreshTokens).values({
-      userId: user.id,
-      token: refreshToken,
-      expiresAt: refreshExpires,
-    });
-    console.log('[POST /api/login] Refresh token stored in DB');
-
-    const response = NextResponse.json({
+    const response = NextResponse.json({ 
       success: true,
-      role: user.role,
+      role: authenticatedUser.role,
     });
+    
+    response.headers.set('Set-Cookie', 
+      `token=${accessToken}; Path=/; HttpOnly; SameSite=Lax`
+    );
 
-    // Set access token cookie
-    setAuthCookie(accessToken, response);
-    console.log('[POST /api/login] Access token cookie set');
-
-    // Set refresh token cookie
-    response.cookies.set('refresh_token', refreshToken, {
-      httpOnly: true,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-    console.log('[POST /api/login] Refresh token cookie set');
+    response.headers.set("Access-Control-Allow-Origin", origin || "http://65.20.72.49");
+    response.headers.set("Access-Control-Allow-Credentials", "true");
 
     return response;
   } catch (error) {
     console.error('[POST /api/login] Error occurred:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Something went wrong: ' + error }, { status: 500 });
   }
 }

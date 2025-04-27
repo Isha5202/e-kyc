@@ -11,69 +11,68 @@ export default function Login() {
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('[handleChange] Field changed:', e.target.name, e.target.value);
-    setData({ ...data, [e.target.name]: e.target.value });
+    setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-  
+
+    console.log('[Login] Submitting login with data:', data);
+
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
+        credentials: 'include',
+        body: JSON.stringify(data),
       });
-  
-      console.log('[handleSubmit] Response status:', res.status);
-  
-      let result = {};
-      const text = await res.text();
-      if (text) {
-        try {
-          result = JSON.parse(text);
-        } catch (err) {
-          console.error('[handleSubmit] Failed to parse JSON:', err);
-        }
-      }
-  
-      console.log('[handleSubmit] Response JSON:', result);
-  
+
+      console.log('[Login] Raw response:', res);
+
+      const result = await res.json();
+      console.log('[Login] Parsed response JSON:', result);
+
       if (!res.ok) {
-        setError((result as any)?.error || 'Login failed');
-        setData({ email: '', password: '' }); // ✅ Clear fields on error
-        setLoading(false);
+        setError(result?.error || 'Login failed');
+        setData({ email: '', password: '' });
         return;
       }
-  
-      const role = (result as any)?.role;
-  
-      if (role === 'admin') {
-        await router.push('/');
-      } else if (role === 'user') {
-        await router.push('/users');
-      } else {
-        console.warn('[handleSubmit] Unknown role, redirecting to /login');
-        await router.push('/login');
+
+      const { role, token } = result;
+
+      console.log('[Login] Role returned from server:', role);
+      console.log('[Login] Token returned from server:', token);
+
+      if (!token) {
+        console.warn('[Login] Warning: No token received in response!');
       }
-    } catch (error) {
-      console.error('[handleSubmit] Unexpected error:', error);
+
+      // Redirect based on role
+      switch (role) {
+        case 'admin':
+          console.log('[Login] Redirecting to admin dashboard');
+          router.push('/');
+          break;
+        case 'user':
+          console.log('[Login] Redirecting to user dashboard');
+          router.push('/users');
+          break;
+        default:
+          console.log('[Login] Role not recognized. Redirecting to login page.');
+          router.push('/login');
+      }
+    } catch (err) {
+      console.error('[Login] Unexpected error:', err);
       setError('Something went wrong.');
-      setData({ email: '', password: '' }); // ✅ Also reset here for server errors
     } finally {
       setLoading(false);
     }
   };
-  
-  
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto  bg-white ">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4">
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       <InputGroup
@@ -95,15 +94,15 @@ export default function Login() {
         className="mb-4"
       />
 
-<div className="flex justify-center">
-  <button
-    type="submit"
-    className="w-[180px] mt-4 bg-blue-900 text-white py-2 px-4 rounded hover:bg-blue-800"
-    disabled={loading}
-  >
-    {loading ? 'Logging in...' : 'Login'}
-  </button>
-</div>
+      <div className="flex justify-center">
+        <button
+          type="submit"
+          className="w-[180px] mt-4 bg-blue-900 text-white py-2 px-4 rounded hover:bg-blue-800"
+          disabled={loading}
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+      </div>
     </form>
   );
 }

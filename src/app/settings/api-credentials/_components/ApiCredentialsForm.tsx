@@ -3,37 +3,81 @@
 import { useEffect, useState } from 'react';
 import InputGroup from "@/components/FormElements/InputGroup";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
+import { cn } from '@/lib/utils';
 
 export default function ApiCredentialsForm() {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const fetchCredentials = async () => {
-      const res = await fetch('/api/settings');
-      const data = await res.json();
-      if (data?.client_id) setClientId(data.client_id);
-      if (data?.client_secret) setClientSecret(data.client_secret);
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data?.client_id) setClientId(data.client_id);
+        if (data?.client_secret) setClientSecret(data.client_secret);
+      } catch (error) {
+        console.error('Failed to fetch credentials:', error);
+        setMessage({ type: 'error', text: 'Failed to load credentials.' });
+      }
     };
     fetchCredentials();
   }, []);
 
+  useEffect(() => {
+    if (message) {
+      const timeout = setTimeout(() => setMessage(null), 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [message]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await fetch('/api/settings', {
-      method: 'POST',
-      body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-    setLoading(false);
-    alert('API credentials updated!');
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Update failed');
+
+      setMessage({ type: 'success', text: 'API credentials updated successfully.' });
+    } catch (error) {
+      console.error(error);
+      setMessage({ type: 'error', text: 'Failed to update API credentials.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="mx-auto w-full max-w-[1080px]">
       <ShowcaseSection title="API Credentials" className="!p-6.5">
+
+        {/* Message */}
+        {message && (
+          <div
+            className={cn(
+              'mb-4 p-3 rounded-md text-sm font-medium',
+              message.type === 'success'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            )}
+          >
+            {message.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <InputGroup
             label="API Key"

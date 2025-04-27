@@ -4,52 +4,32 @@ import React, { useEffect, useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import EditUserModal from './EditUserModal';
+import EditBranchModal from './EditBranchModal'; // Import the EditBranchModal component
 
 interface Branch {
   id: number;
   branch_name: string;
+  branch_code: string;
+  contact_number: string;
+  email: string;
   ifsc_code: string;
 }
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  branchName: string | null;
-  branchId: number | null; // Added branchId field
-}
-
-export default function ManageUserTable() {
-  const [users, setUsers] = useState<User[]>([]);
+export default function ManageBranchTable() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editUserId, setEditUserId] = useState<number | null>(null);
+  const [editBranchId, setEditBranchId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState({
-    name: '',
+    branch_name: '',
+    branch_code: '',
+    contact_number: '',
     email: '',
-    password: '',
-    branchId: '',
+    ifsc_code: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch('/api/users');
-        const data = await res.json();
-        const filtered = data.filter((user: User) => user.role !== 'admin');
-        setUsers(filtered);
-      } catch (error) {
-        console.error('Failed to fetch users:', error);
-        setMessage({ type: 'error', text: 'Failed to load users.' });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const fetchBranches = async () => {
       try {
         const res = await fetch('/api/branches');
@@ -57,10 +37,12 @@ export default function ManageUserTable() {
         setBranches(data);
       } catch (error) {
         console.error('Failed to fetch branches:', error);
+        setMessage({ type: 'error', text: 'Failed to load branches.' });
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUsers();
     fetchBranches();
   }, []);
 
@@ -71,103 +53,103 @@ export default function ManageUserTable() {
     }
   }, [message]);
 
-  const openEditModal = async (userId: number) => {
+  const openEditModal = async (branchId: number) => {
     try {
-      const res = await fetch(`/api/users/${userId}`);
-      const user = await res.json();
+      const res = await fetch(`/api/branches/${branchId}`);
+      const branch = await res.json();
 
-      setEditUserId(userId);
+      setEditBranchId(branchId);
       setEditFormData({
-        name: user.name || '',
-        email: user.email || '',
-        password: user.password_hash || '',
-        branchId: user.branchId?.toString() || '', // branchId must be a string for <select>
+        branch_name: branch.branch_name || '',
+        branch_code: branch.branch_code || '',  // Make sure this is set
+        contact_number: branch.contact_number || '',  // Make sure this is set
+        email: branch.email || '',  // Make sure this is set
+        ifsc_code: branch.ifsc_code || '',
       });
       setModalOpen(true);
     } catch (error) {
-      console.error('Failed to load user for edit:', error);
-      setMessage({ type: 'error', text: 'Failed to load user for editing.' });
+      console.error('Failed to load branch for edit:', error);
+      setMessage({ type: 'error', text: 'Failed to load branch for editing.' });
     }
   };
 
   const handleSave = async () => {
-    if (!editUserId) return;
+    if (!editBranchId) return;
 
     try {
-      const res = await fetch(`/api/users/${editUserId}`, {
+      const res = await fetch(`/api/branches/${editBranchId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: editFormData.name,
-          email: editFormData.email,
-          password: editFormData.password,
-          branchId: Number(editFormData.branchId),
-        }),
+        body: JSON.stringify(editFormData),
       });
 
-      if (!res.ok) throw new Error('Failed to update user');
+      if (!res.ok) throw new Error('Failed to update branch');
 
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === editUserId
-            ? { ...user, name: editFormData.name, email: editFormData.email, branchName: getBranchName(Number(editFormData.branchId)) }
-            : user
+      setBranches((prev) =>
+        prev.map((branch) =>
+          branch.id === editBranchId
+            ? { ...branch, ...editFormData }
+            : branch
         )
       );
 
-      setMessage({ type: 'success', text: 'User updated successfully.' });
+      setMessage({ type: 'success', text: 'Branch updated successfully.' });
 
       setModalOpen(false);
-      setEditUserId(null);
+      setEditBranchId(null);
     } catch (error) {
       console.error(error);
-      setMessage({ type: 'error', text: 'Failed to update user.' });
+      setMessage({ type: 'error', text: 'Failed to update branch.' });
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`/api/users/${id}`, {
+      const res = await fetch(`/api/branches/${id}`, {
         method: 'DELETE',
       });
-      setUsers((prev) => prev.filter((user) => user.id !== id));
-      setMessage({ type: 'success', text: 'User deleted successfully.' });
-      } catch (error) {
-      console.error('Error:', error);
-      setMessage({ type: 'error', text: 'Failed to delete user.' });
+      setBranches((prev) => prev.filter((branch) => branch.id !== id));
+      setMessage({ type: 'success', text: 'Branch deleted successfully.' });
+    } catch (error) {
+      console.error(error);
+      setMessage({ type: 'error', text: 'Failed to delete branch.' });
     }
   };
-  
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const getBranchName = (branchId: number) => {
-    const branch = branches.find((b) => b.id === branchId);
-    return branch ? branch.branch_name : 'N/A'; // Return only branch_name
-  };
-
-  const columns: TableColumn<User>[] = [
+  const columns: TableColumn<Branch>[] = [
     {
       name: 'Sr. No.',
       cell: (_row, index) => index + 1,
       width: '80px',
     },
     {
-      name: 'Name',
-      selector: (row) => row.name,
+      name: 'Branch Name',
+      selector: (row) => row.branch_name,
+      sortable: true,
+    },
+    {
+      name: 'Branch Code',
+      selector: (row) => row.branch_code,
+      sortable: true,
+    },
+    {
+      name: 'Contact Number',
+      selector: (row) => row.contact_number || '-' ,
       sortable: true,
     },
     {
       name: 'Email',
-      selector: (row) => row.email,
+      selector: (row) => row.email  || '-',
       sortable: true,
     },
     {
-      name: 'Branch Name',
-      selector: (row) => row.branchName || 'N/A',
+      name: 'IFSC Code',
+      selector: (row) => row.ifsc_code,
       sortable: true,
     },
     {
@@ -191,7 +173,7 @@ export default function ManageUserTable() {
       ignoreRowClick: true,
     },
   ];
-
+  
   return (
     <div
       className={cn(
@@ -217,29 +199,31 @@ export default function ManageUserTable() {
         title={
           <div className="flex items-center justify-between w-full">
             <h2 className="mb-4 text-xl font-bold text-dark dark:text-white">
-              Manage Users
+              Manage Branches
             </h2>
-            <Link href="/add-user">
+            <Link href="/add-branch">
               <button className="flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
-                + Add User
+                + Add Branch
               </button>
             </Link>
           </div>
         }
         columns={columns}
-        data={users}
+        data={branches}
         progressPending={loading}
         pagination
       />
 
-      <EditUserModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
-        formData={editFormData}
-        handleChange={handleChange}
-        branches={branches} // Pass branches
-      />
+      {/* Edit Branch Modal */}
+      {modalOpen && (
+        <EditBranchModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSave={handleSave}
+          formData={editFormData}
+          handleChange={handleChange}
+        />
+      )}
     </div>
   );
 }
