@@ -3,10 +3,10 @@ import { formatMessageTime } from "@/lib/format-message-time";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { getChatsData } from "../fetch";
+// import { getChatsData } from "../fetch";
 
 export async function ChatsCard() {
-  const data = await getChatsData();
+  // const data = await getChatsData();
 
   return (
     <div className="col-span-12 rounded-[10px] bg-white py-6 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-4">
@@ -14,7 +14,7 @@ export async function ChatsCard() {
         Chats
       </h2>
 
-      <ul>
+      {/* <ul>
         {data.map((chat, key) => (
           <li key={key}>
             <Link
@@ -72,7 +72,7 @@ export async function ChatsCard() {
             </Link>
           </li>
         ))}
-      </ul>
+      </ul> */}
     </div>
   );
 }

@@ -24,14 +24,14 @@ const ekycTypes = [
 const validationPatterns: Record<string, RegExp> = {
   aadhar: /^[0-9]{12}$/, // Aadhaar number - only digits
   pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, // PAN number - uppercase letters and digits only
-  cin: /^[A-Z]{2}[0-9]{5}$/, // CIN - uppercase letters and digits only
+  cin: /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/, // CIN - uppercase letters and digits only
   gst: /^[0-9]{15}$/, // GSTIN - only digits
   dl: /^[A-Z]{2}[0-9]{13}$/, // DL - uppercase letters and digits only
   fssai: /^[0-9]{14}$/, // FSSAI - only digits
   shopact: /^[A-Z0-9]{10}$/, // Shopact - uppercase letters and digits only
   udyam: /^[A-Z0-9]{12}$/, // Udyam Aadhaar - uppercase letters and digits only
   voter: /^[A-Z0-9]{10}$/, // Voter ID - uppercase letters and digits only
-  passport: /^[A-Z]{1}[0-9]{7}$/, // Passport - uppercase letter followed by digits only
+  passport: /^[A-Z]{2}[0-9]{13}$/, // Passport - uppercase letter followed by digits only
   otp: /^[0-9]{6}$/, // OTP - only digits
 };
 
@@ -337,10 +337,10 @@ export default function EKYCForm() {
         return (
           <>
             <InputGroup
-              label="Passport Number"
+              label="File Number"
               name="passport_number"
               value={formData.passport_number || ""}
-              placeholder="Enter Passport Number"
+              placeholder="Enter File Number"
               type="text"
               handleChange={handleChange}
               required
