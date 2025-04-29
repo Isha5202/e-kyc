@@ -124,6 +124,7 @@ export function AddBranchForm() {
               className="w-full"
               value={formData.ifsc_code}
               handleChange={handleChange}
+              required
             />
           </div>
 

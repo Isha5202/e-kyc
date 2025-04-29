@@ -69,4 +69,11 @@ export const kycLogsRelations = relations(kycLogs, ({ one }) => ({
   }),
 }));
 
-
+// System Settings table
+export const system_settings = pgTable('system_settings', {
+  id: serial('id').primaryKey(),
+  setting_key: text('setting_key').notNull().unique(),
+  setting_value: text('setting_value').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});

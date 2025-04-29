@@ -7,7 +7,10 @@ import { Eye, EyeOff } from "lucide-react";
 type InputGroupProps = {
   className?: string;
   maxLength?: number;
+  max?: string;  // Add this line
+  min?: string;   // Optional: add if you need min validation
   label: string;
+  error?: string; // Add error prop
   placeholder: string;
   type: HTMLInputTypeAttribute;
   fileStyleVariant?: "style1" | "style2";
@@ -33,6 +36,7 @@ const InputGroup: React.FC<InputGroupProps> = ({
   active,
   handleChange,
   icon,
+  error, // Destructure error prop
   ...props
 }) => {
   const id = useId();
@@ -68,6 +72,8 @@ const InputGroup: React.FC<InputGroupProps> = ({
           onChange={handleChange}
           value={props.value}
           defaultValue={props.defaultValue}
+          max={props.max}
+  min={props.min}
           className={cn(
             "w-full rounded-lg border-[1.5px] border-stroke bg-transparent outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 data-[active=true]:border-primary dark:border-dark-3 dark:bg-dark-2 dark:focus:border-primary dark:disabled:bg-dark dark:data-[active=true]:border-primary",
             type === "file"
@@ -75,6 +81,7 @@ const InputGroup: React.FC<InputGroupProps> = ({
               : "px-5.5 py-3 text-dark placeholder:text-dark-6 dark:text-white",
             props.iconPosition === "left" && "pl-12.5",
             props.height === "sm" && "py-2.5",
+            error && "border-red-500" // Add error styling
           )}
           required={required}
           disabled={disabled}
@@ -94,6 +101,7 @@ const InputGroup: React.FC<InputGroupProps> = ({
           </button>
         )}
       </div>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
   );
 };

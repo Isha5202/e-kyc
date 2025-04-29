@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface KYCResultCardProps {
   type: string;
   data: any;
+  ekycFormInput?: { panNumber?: string; aadhaarNumber?: string; inputValue?: string };
 }
 const typeMapping: { [key: string]: string } = {
   pan: "PAN",
@@ -20,8 +21,25 @@ const typeMapping: { [key: string]: string } = {
   "pan-aadhaar-link": "PAN-Aadhaar Link",
 };
 
-const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
+const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data , ekycFormInput  }) => {
   const [loading, setLoading] = useState(false);
+  const [apiText, setApiText] = useState("integrated with deepvue.tech API.");
+
+  // Fetch API text on component mount
+  useEffect(() => {
+    const fetchApiText = async () => {
+      try {
+        const response = await fetch('/api/admin/settings/api-text');
+        if (response.ok) {
+          const { text } = await response.json();
+          setApiText(text);
+        }
+      } catch (error) {
+        console.error("Failed to fetch API text:", error);
+      }
+    };
+    fetchApiText();
+  }, []);
   const extractResultData = (data: any) => {
     if (!data) return null;
     // Check common nesting patterns
@@ -44,14 +62,56 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
       </div>
     );
   }
+
+  const typeName = typeMapping[type] || type;
+
+  const getNameFromResult = () => {
+    switch (type) {
+      case "pan":
+        return resultData?.full_name;
+      case "aadhar":
+        return resultData?.name;
+      case "cin":
+        return resultData?.company_master_data?.company_name;
+      case "gst":
+        return resultData?.lgnm;
+      case "dl":
+        return resultData?.[0]?.result?.source_output?.name || resultData?.name;
+      case "voter":
+        return resultData?.[0]?.result?.source_output?.name_on_card || resultData?.name_on_card;
+      case "fssai":
+        return resultData?.details?.[0]?.company_name;
+      case "shopact":
+        return resultData?.business_name;
+      case "udyam":
+        return resultData?.[0]?.result?.source_output?.general_details?.enterprise_name;
+      case "passport":
+        return resultData?.name;
+      case "pan-aadhaar-link":
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const getCertificateText = () => {
+    if (type === "pan-aadhaar-link") {
+      return `This is to Certify that PAN no.: ${ekycFormInput?.panNumber ?? ""} and Aadhaar no.: ${ekycFormInput?.aadhaarNumber ?? ""} are verified, ${apiText}`;
+    } else {
+      return `This is to Certify that ${getNameFromResult() || "Name Not Available"} ${typeName} no.: ${ekycFormInput?.inputValue ?? ""} are verified, ${apiText}`;
+    }
+  };
+
+
+
   const downloadPDF = async () => {
     setLoading(true);
     const displayedData: Record<string, any> = {};
-
+    const typeName = typeMapping[type] || type;
     const add = (label: string, value: any) => {
       displayedData[label] = value ?? "N/A";
     };
-    const typeName = typeMapping[type] || type;
+
     switch (type) {
       case "pan":
         add("PAN Number", resultData.pan_number);
@@ -70,6 +130,8 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
 
         if (resultData.address) {
           const addressParts = [
+            resultData.address.careOf,
+            resultData.address.country,
             resultData.address.house,
             resultData.address.street,
             resultData.address.landmark,
@@ -178,17 +240,18 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
         });
     }
 
+    const certificateText = getCertificateText(); // 🛑 this was missing in request body
+
     try {
       const response = await fetch("/api/kyc/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, data: displayedData }),
+        body: JSON.stringify({ type, data: displayedData, certificateText }), // 👈 Added
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to generate PDF");
       }
-
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -203,7 +266,7 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
       setLoading(false); // stop loading after completion (success or fail)
     }
   };
-  const typeName = typeMapping[type] || type;
+ 
   if (!resultData) {
     return (
       <div className="font-semibold text-red-500">
@@ -262,6 +325,8 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data }) => {
 
   const renderAadhaar = () => {
     const addressParts = [
+      resultData.address.careOf,
+      resultData.address.country,
       resultData.address?.house,
       resultData.address?.street,
       resultData.address?.landmark,

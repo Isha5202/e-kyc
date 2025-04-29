@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { branches } from "@/lib/schema"; // Assuming branches table is imported
+import { branches, users } from "@/lib/schema";
 
-// GET branch by ID
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
@@ -14,69 +13,114 @@ export async function GET(req: NextRequest) {
     });
 
     if (!branch) {
-      return new Response(JSON.stringify({ message: "Branch not found" }), { status: 404 });
+      return new Response(JSON.stringify({ message: "Branch not found" }), { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    return new Response(JSON.stringify(branch), { status: 200 });
+    return new Response(JSON.stringify(branch), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+    return new Response(JSON.stringify({ 
+      message: "Internal Server Error",
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
-// PUT update branch by ID
 export async function PUT(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const id = Number(url.pathname.split("/").pop());
+    const body = await req.json();
 
-    const { branch_name, branch_code, contact_number, email, ifsc_code } = await req.json();
+    const updates: Partial<typeof branches.$inferInsert> = {};
+    
+    // Only update fields that are provided
+    if (body.branch_name !== undefined) updates.branch_name = body.branch_name;
+    if (body.branch_code !== undefined) updates.branch_code = body.branch_code;
+    if (body.contact_number !== undefined) updates.contact_number = body.contact_number;
+    if (body.email !== undefined) updates.email = body.email;
+    if (body.ifsc_code !== undefined) updates.ifsc_code = body.ifsc_code;
 
-    const updates: {
-      branch_name?: string;
-      branch_code?: string;
-      contact_number?: string;
-      email?: string;
-      ifsc_code?: string;
-    } = {};
+    const result = await db.update(branches)
+      .set(updates)
+      .where(eq(branches.id, id));
 
-    if (branch_name) updates.branch_name = branch_name;
-    if (branch_code) updates.branch_code = branch_code;
-    if (contact_number) updates.contact_number = contact_number;
-    if (email) updates.email = email;
-    if (ifsc_code) updates.ifsc_code = ifsc_code;
-
-    await db.update(branches).set(updates).where(eq(branches.id, id));
-
-    return new Response(JSON.stringify({ message: "Branch updated successfully" }), { status: 200 });
+    return new Response(JSON.stringify({ message: "Branch updated successfully" }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+    return new Response(JSON.stringify({ 
+      message: "Failed to update branch",
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
-// DELETE branch by ID
 export async function DELETE(req: NextRequest) {
-    try {
-      const url = new URL(req.url);
-      const id = Number(url.pathname.split("/").pop());
-  
-      // Attempt to delete the branch from the database
-      const result = await db.delete(branches).where(eq(branches.id, id));
-  
-      // Check if result is an object that has a property like `affectedRows` or `count`
-      if (result && typeof result === 'object' && 'affectedRows' in result) {
-        if (result.affectedRows === 0) {
-          return new Response(JSON.stringify({ message: "Branch not found or could not be deleted" }), { status: 404 });
-        }
-      } else {
-        return new Response(JSON.stringify({ message: "Unexpected result format" }), { status: 500 });
-      }
-  
-      return new Response(JSON.stringify({ message: "Branch deleted successfully" }), { status: 200 });
-    } catch (error) {
-      console.error(error);
-      return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+  try {
+    const url = new URL(req.url);
+    const id = Number(url.pathname.split("/").pop());
+
+    // First check if branch exists
+    const branch = await db.query.branches.findFirst({
+      where: eq(branches.id, id),
+    });
+
+    if (!branch) {
+      return new Response(JSON.stringify({ message: "Branch not found" }), { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
+
+    // Check for associated users
+    const usersInBranch = await db.query.users.findMany({
+      where: eq(users.branch_id, id),
+    });
+
+    if (usersInBranch.length > 0) {
+      return new Response(JSON.stringify({ 
+        message: "Cannot delete branch with associated users",
+        userCount: usersInBranch.length
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Perform deletion - Drizzle delete returns a query result without row count
+    await db.delete(branches)
+      .where(eq(branches.id, id));
+
+    return new Response(JSON.stringify({ 
+      message: "Branch deleted successfully",
+      deletedId: id
+    }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ 
+      message: "Failed to delete branch",
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-  
+}

@@ -75,21 +75,37 @@ export async function DELETE(req: NextRequest) {
     const url = new URL(req.url);
     const id = Number(url.pathname.split("/").pop());
 
-    // Attempt to delete the user from the database
-    const result = await db.delete(users).where(eq(users.id, id));
+    // First verify the user exists
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
 
-// Check if result is an object that has a property like `affectedRows` or `count`
-if (result && typeof result === 'object' && 'affectedRows' in result) {
-  if (result.affectedRows === 0) {
-    return new Response(JSON.stringify({ message: "User not found or could not be deleted" }), { status: 404 });
-  }
-} else {
-  return new Response(JSON.stringify({ message: "Unexpected result format" }), { status: 500 });
-}
+    if (!user) {
+      return new Response(JSON.stringify({ message: "User not found" }), { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
-return new Response(JSON.stringify({ message: "User deleted successfully" }), { status: 200 });
+    // Perform deletion - Drizzle delete doesn't return row count
+    await db.delete(users)
+      .where(eq(users.id, id));
+
+    return new Response(JSON.stringify({ 
+      message: "User deleted successfully",
+      deletedId: id
+    }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+    return new Response(JSON.stringify({ 
+      message: "Failed to delete user",
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

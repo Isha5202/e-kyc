@@ -31,6 +31,10 @@ export const NAV_DATA = [
             url: "/settings/api-credentials",
           },
           {
+            title: "API Text",
+            url: "/settings/api-text",
+          },
+          {
             title: "Service Log",
             url: "/settings/service-log",
           },

@@ -34,7 +34,7 @@ export default function ManageUserTable() {
   });
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -125,17 +125,29 @@ export default function ManageUserTable() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDeleteClick = (id: number) => {
+    setDeleteConfirmId(id);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmId) return;
+    
     try {
-      const res = await fetch(`/api/users/${id}`, {
+      const res = await fetch(`/api/users/${deleteConfirmId}`, {
         method: 'DELETE',
       });
-      setUsers((prev) => prev.filter((user) => user.id !== id));
+      setUsers((prev) => prev.filter((user) => user.id !== deleteConfirmId));
       setMessage({ type: 'success', text: 'User deleted successfully.' });
-      } catch (error) {
+    } catch (error) {
       console.error('Error:', error);
       setMessage({ type: 'error', text: 'Failed to delete user.' });
+    } finally {
+      setDeleteConfirmId(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmId(null);
   };
   
 
@@ -148,6 +160,34 @@ export default function ManageUserTable() {
     const branch = branches.find((b) => b.id === branchId);
     return branch ? branch.branch_name : 'N/A'; // Return only branch_name
   };
+
+  const DeleteConfirmationDialog = () => {
+    if (!deleteConfirmId) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
+          <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+          <div className="flex justify-end gap-3 mt-4">
+            <button
+              onClick={handleDeleteCancel}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   const columns: TableColumn<User>[] = [
     {
@@ -182,7 +222,7 @@ export default function ManageUserTable() {
           </button>
           <button
             className="text-red-500 hover:underline"
-            onClick={() => handleDelete(row.id)}
+            onClick={() => handleDeleteClick(row.id)}
           >
             Delete
           </button>
@@ -240,6 +280,10 @@ export default function ManageUserTable() {
         handleChange={handleChange}
         branches={branches} // Pass branches
       />
+
+<DeleteConfirmationDialog />
+
+
     </div>
   );
 }

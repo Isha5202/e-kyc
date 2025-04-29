@@ -80,6 +80,23 @@ export default function EKYCForm() {
     }
     return true;
   };
+  const getInputFieldForType = (type: string) => {
+    switch (type) {
+      case "pan": return "pan_number";
+      case "aadhar": return "aadhaar_number";
+      case "cin": return "cin";
+      case "gst": return "gstin";
+      case "dl": return "rc_number";
+      case "fssai": return "fssai_number";
+      case "shopact": return "shopact_number";
+      case "udyam": return "udyam_number";
+      case "voter": return "epic_number";
+      case "passport": return "passport_number";
+      default: return "inputValue";
+    }
+  };
+
+  const today = new Date().toISOString().split('T')[0];
   const handleSubmit = async (e: React.FormEvent, type: string) => {
     e.preventDefault();
     setLoading(true);
@@ -271,6 +288,7 @@ export default function EKYCForm() {
               placeholder="YYYY-MM-DD"
               type="date"
               handleChange={handleChange}
+              max={today}
               required
             />
           </>
@@ -352,6 +370,7 @@ export default function EKYCForm() {
               placeholder="YYYY-MM-DD"
               type="date"
               handleChange={handleChange}
+              max={today}
               required
             />
           </>
@@ -441,6 +460,11 @@ export default function EKYCForm() {
                   <KYCResultCard
                     type={ekycTypes[selectedIndex].id}
                     data={results[ekycTypes[selectedIndex].id]}
+                    ekycFormInput={{ //  Add this prop
+                      panNumber: formData.pan_number,
+                      aadhaarNumber: formData.aadhaar_number,
+                      inputValue: formData[getInputFieldForType(type.id)]
+                    }}
                   />
                 )}
               </Tab.Panel>
