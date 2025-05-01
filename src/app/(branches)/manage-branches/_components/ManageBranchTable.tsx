@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import EditBranchModal from './EditBranchModal'; // Import the EditBranchModal component
+import EditBranchModal from './EditBranchModal';
 
 interface Branch {
   id: number;
@@ -26,9 +26,17 @@ export default function ManageBranchTable() {
     email: '',
     ifsc_code: '',
   });
+  const [errors, setErrors] = useState({
+    branch_name: '',
+    branch_code: '',
+    contact_number: '',
+    email: '',
+    ifsc_code: ''
+  });
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchBranches = async () => {
       try {
@@ -53,6 +61,70 @@ export default function ManageBranchTable() {
     }
   }, [message]);
 
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      branch_name: '',
+      branch_code: '',
+      contact_number: '',
+      email: '',
+      ifsc_code: ''
+    };
+
+    // Branch Name validation
+    if (!editFormData.branch_name.trim()) {
+      newErrors.branch_name = "Branch name is required";
+      isValid = false;
+    }
+
+ // IFSC Code validation (must come before branch code validation)
+ if (!editFormData.ifsc_code.trim()) {
+  newErrors.ifsc_code = "IFSC code is required";
+  isValid = false;
+} else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(editFormData.ifsc_code)) {
+  newErrors.ifsc_code = "Invalid format (e.g., ABCD0123456)";
+  isValid = false;
+}
+
+// Branch Code validation - must match last 6 digits of IFSC
+if (!editFormData.branch_code.trim()) {
+  newErrors.branch_code = "Branch code is required";
+  isValid = false;
+} else {
+  // Get last 6 digits of IFSC code
+  const lastSixOfIfsc = editFormData.ifsc_code.slice(-6);
+  
+  // Check if branch code matches last 6 of IFSC
+  if (editFormData.branch_code !== lastSixOfIfsc) {
+    newErrors.branch_code = "Must match last 6 digits of IFSC code";
+    isValid = false;
+  }
+  
+  // Additional check for alphanumeric (if needed)
+  if (!/^[A-Z0-9]{6}$/.test(editFormData.branch_code)) {
+    newErrors.branch_code = "Must be exactly 6 alphanumeric characters";
+    isValid = false;
+  }
+}
+
+    // Contact Number validation
+    if (editFormData.contact_number && !/^[0-9]{10}$/.test(editFormData.contact_number)) {
+      newErrors.contact_number = "Must be 10 digits";
+      isValid = false;
+    }
+
+    // Email validation
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+if (editFormData.email && !emailRegex.test(editFormData.email)) {
+  newErrors.email = "Please enter a valid email address";
+  isValid = false;
+}
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const openEditModal = async (branchId: number) => {
     try {
       const res = await fetch(`/api/branches/${branchId}`);
@@ -61,10 +133,17 @@ export default function ManageBranchTable() {
       setEditBranchId(branchId);
       setEditFormData({
         branch_name: branch.branch_name || '',
-        branch_code: branch.branch_code || '',  // Make sure this is set
-        contact_number: branch.contact_number || '',  // Make sure this is set
-        email: branch.email || '',  // Make sure this is set
+        branch_code: branch.branch_code || '',
+        contact_number: branch.contact_number || '',
+        email: branch.email || '',
         ifsc_code: branch.ifsc_code || '',
+      });
+      setErrors({
+        branch_name: '',
+        branch_code: '',
+        contact_number: '',
+        email: '',
+        ifsc_code: ''
       });
       setModalOpen(true);
     } catch (error) {
@@ -75,6 +154,8 @@ export default function ManageBranchTable() {
 
   const handleSave = async () => {
     if (!editBranchId) return;
+
+    if (!validateForm()) return;
 
     try {
       const res = await fetch(`/api/branches/${editBranchId}`, {
@@ -94,7 +175,6 @@ export default function ManageBranchTable() {
       );
 
       setMessage({ type: 'success', text: 'Branch updated successfully.' });
-
       setModalOpen(false);
       setEditBranchId(null);
     } catch (error) {
@@ -128,10 +208,14 @@ export default function ManageBranchTable() {
     setDeleteConfirmId(null);
   };
 
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear error when user types
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const DeleteConfirmationDialog = () => {
@@ -160,6 +244,7 @@ export default function ManageBranchTable() {
       </div>
     );
   };
+
   const columns: TableColumn<Branch>[] = [
     {
       name: 'Sr. No.',
@@ -178,12 +263,12 @@ export default function ManageBranchTable() {
     },
     {
       name: 'Contact Number',
-      selector: (row) => row.contact_number || '-' ,
+      selector: (row) => row.contact_number || '-',
       sortable: true,
     },
     {
       name: 'Email',
-      selector: (row) => row.email  || '-',
+      selector: (row) => row.email || '-',
       sortable: true,
     },
     {
@@ -212,7 +297,7 @@ export default function ManageBranchTable() {
       ignoreRowClick: true,
     },
   ];
-  
+
   return (
     <div
       className={cn(
@@ -220,7 +305,6 @@ export default function ManageBranchTable() {
         'dark:bg-gray-dark dark:shadow-card'
       )}
     >
-      {/* Message Box */}
       {message && (
         <div
           className={cn(
@@ -253,21 +337,16 @@ export default function ManageBranchTable() {
         pagination
       />
 
-      {/* Edit Branch Modal */}
-      {modalOpen && (
-        <EditBranchModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onSave={handleSave}
-          formData={editFormData}
-          handleChange={handleChange}
-        />
-      )}
+      <EditBranchModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+        formData={editFormData}
+        handleChange={handleChange}
+        errors={errors}
+      />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog />
-
-
     </div>
   );
 }

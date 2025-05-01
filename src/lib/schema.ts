@@ -1,7 +1,15 @@
 //src\lib\schema.ts
 
-import { pgTable, text, serial, integer, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, integer, timestamp, boolean, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm'; // required for table relationships
+import { hash, compare } from 'bcryptjs';
+
+
+// Password hashing configuration
+const SALT_ROUNDS = 12;
+
+// Simplified Role enum with just admin and user
+export const userRoleEnum = pgEnum('user_role', ['admin', 'user']);
 
 //  Settings table
 export const settings = pgTable('settings', {
@@ -30,10 +38,10 @@ export const branches = pgTable('branches', {
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  email: text('email').notNull(),
+  email: text('email').notNull().unique(),
   password_hash: text('password_hash').notNull(),
-  role: text('role'),
-  branch_id: integer('branch_id'), // Nullable foreign key
+  role: userRoleEnum('role').default('user'),
+  branch_id: integer('branch_id').references(() => branches.id),
 });
 
 //  Users relation to branch
@@ -77,3 +85,27 @@ export const system_settings = pgTable('system_settings', {
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
+
+
+// Password utility functions
+export const authHelpers = {
+  async hashPassword(password: string): Promise<string> {
+    return await hash(password, SALT_ROUNDS);
+  },
+  async verifyPassword(password: string, hash: string): Promise<boolean> {
+    return await compare(password, hash);
+  },
+  validatePasswordComplexity(password: string): { valid: boolean; message?: string } {
+    if (password.length < 8) {
+      return { valid: false, message: 'Password must be at least 8 characters' };
+    }
+    // Add more complexity rules as needed
+    return { valid: true };
+  }
+};
+
+// TypeScript types
+export type User = typeof users.$inferSelect;
+export type NewUser = Omit<typeof users.$inferInsert, 'password_hash'> & {
+  password?: string;
+};

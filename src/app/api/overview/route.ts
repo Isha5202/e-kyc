@@ -1,33 +1,43 @@
 // src/app/api/overview/route.ts
 import { db } from "@/lib/db";
 import { users, branches, kycLogs } from "@/lib/schema";
-import { sql } from "drizzle-orm"; // 💥 import sql
+import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    // Get counts
-    const totalUsersPromise = db
-  .select({ count: sql<number>`count(*)` })
-  .from(users)
-  .where(sql`deleted_at IS NULL`); // Assuming soft deletion is implemented
-    const totalBranchesPromise = db.select({ count: sql<number>`count(*)` }).from(branches);
-    const totalKycPromise = db.select({ count: sql<number>`count(*)` }).from(kycLogs);
-
-    // Parallel execution
-    const [totalUsers, totalBranches, totalKyc] = await Promise.all([
-      totalUsersPromise,
-      totalBranchesPromise,
-      totalKycPromise,
+    // Get counts with explicit type casting
+    const [usersResult, branchesResult, kycResult] = await Promise.all([
+      db.execute(sql<{ count: number }>`
+        SELECT CAST(COUNT(*) AS INTEGER) as count 
+        FROM ${users} 
+        WHERE role = 'user'
+      `),
+      db.execute(sql<{ count: number }>`
+        SELECT CAST(COUNT(*) AS INTEGER) as count 
+        FROM ${branches}
+      `),
+      db.execute(sql<{ count: number }>`
+        SELECT CAST(COUNT(*) AS INTEGER) as count 
+        FROM ${kycLogs}
+      `)
     ]);
 
     return NextResponse.json({
-      users: totalUsers[0]?.count || 0,
-      branches: totalBranches[0]?.count || 0,
-      kyc: totalKyc[0]?.count || 0,
+      users: usersResult.rows[0]?.count ?? 0,
+      branches: branchesResult.rows[0]?.count ?? 0,
+      kyc: kycResult.rows[0]?.count ?? 0,
     });
   } catch (error) {
-    console.error(error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("Error in overview endpoint:", error);
+    return NextResponse.json(
+      { 
+        error: "Internal Server Error",
+        details: process.env.NODE_ENV === "development" 
+          ? error instanceof Error ? error.message : String(error)
+          : undefined
+      },
+      { status: 500 }
+    );
   }
 }

@@ -51,7 +51,7 @@ export default function ApiTextSettings() {
   return (
     <div className="mx-auto w-full max-w-[1080px]">
 
-           <ShowcaseSection title="API Credentials" className="!p-6.5">
+           <ShowcaseSection title="PDF Note" className="!p-6.5">
       {message.content && (
         <div className={`mb-4 p-3 rounded ${
           message.type === "success" 
@@ -76,7 +76,7 @@ export default function ApiTextSettings() {
             required
           />
           <p className="mt-1 text-sm text-gray-500">
-            This text will appear at the end of all  PDF verification certificates.
+            This text will appear at the PDF of all the verification certificates.
           </p>
         </div>
         

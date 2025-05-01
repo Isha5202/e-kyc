@@ -71,14 +71,13 @@ export default function TopKycTypesBarChart() {
             </div>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart
-          layout="vertical"
           data={data}
-          margin={{ top: 20,left:10, right:10, bottom: 20 }}
+          margin={{ top: 20, left: 10, right: 10, bottom: 20 }}
         >
-          <XAxis type="number" />
-          <YAxis dataKey="name" type="category" />
+          <XAxis dataKey="name" />
+          <YAxis />
           <Tooltip
-            formatter={(value: number) => `${value} (${value.toFixed(2)}%)`} // Specify the type of 'value'
+            formatter={(value: number) => `${value} (${(value).toFixed(2)}%)`}
           />
           <Legend verticalAlign="top" height={36} />
           <Bar dataKey="value">
@@ -87,9 +86,9 @@ export default function TopKycTypesBarChart() {
             ))}
             <LabelList
               dataKey="percentage"
-              position="insideRight"
-              fill="#fff"
-              formatter={(value: number) => `${value.toFixed(2)}%`} // Show percentage inside the bar
+              position="top"
+              fill="#333"
+              formatter={(value: number) => `${value.toFixed(2)}%`}
             />
           </Bar>
         </BarChart>

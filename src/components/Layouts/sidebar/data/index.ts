@@ -11,14 +11,14 @@ export const NAV_DATA = [
         items: [],
       },
       {
-        title: "Manage User",
-        url: "/manage-user",
+        title: "Manage Users",
+        url: "/manage-users",
         icon: Icons.UserManagementIcon,
         items: [],
       },
       {
-        title: "Manage branch",
-        url: "/manage-branch",
+        title: "Manage Branches",
+        url: "/manage-branches",
         icon: Icons.BranchIcon,
         items: [],
       },
@@ -31,8 +31,8 @@ export const NAV_DATA = [
             url: "/settings/api-credentials",
           },
           {
-            title: "API Text",
-            url: "/settings/api-text",
+            title: "PDF Note",
+            url: "/settings/pdf-note",
           },
           {
             title: "Service Log",

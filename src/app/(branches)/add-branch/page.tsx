@@ -6,7 +6,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 export default function AddUserPage() {
   return (
     <div className="mx-auto w-full">
-    <Breadcrumb pageName="Add User" />
+    <Breadcrumb pageName="Add Branch" />
     <AddBranchForm />;
     </div>
   )

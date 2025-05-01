@@ -46,6 +46,8 @@ export function AddUserForm() {
     // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      newErrors.name = "Name should contain only alphabets and spaces";
     } else if (formData.name.length < 2) {
       newErrors.name = "Name must be at least 2 characters";
     } else if (formData.name.length > 50) {
@@ -130,10 +132,18 @@ export function AddUserForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to add user");
+        if (res.status === 409) {
+          setErrors((prev) => ({
+            ...prev,
+            submitError: "Email already exists",
+          }));
+        } else {
+          throw new Error(data.message || "Failed to add user");
+        }
+        return;
       }
 
-      router.push("/manage-user");
+      router.push("/manage-users");
     } catch (err: any) {
       setErrors((prev) => ({
         ...prev,
@@ -224,7 +234,7 @@ export function AddUserForm() {
 
           <div className="mt-6 flex gap-3">
             <Link
-              href="/manage-user"
+              href="/manage-users"
               className="h-[40px] rounded-lg border border-gray-300 px-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-white dark:hover:bg-dark-3"
             >
               Back
@@ -232,7 +242,9 @@ export function AddUserForm() {
             <button
               type="submit"
               className="rounded-lg bg-blue-900 px-5 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
-              disabled={isSubmitting}
+              disabled={isSubmitting || Object.values(errors).some(error => error) || 
+                        !formData.name || !formData.email || !formData.password || 
+                        !formData.confirmPassword || !formData.branchId}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>

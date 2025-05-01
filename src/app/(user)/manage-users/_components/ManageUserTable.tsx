@@ -5,6 +5,7 @@ import DataTable, { TableColumn } from 'react-data-table-component';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import EditUserModal from './EditUserModal';
+import { authHelpers } from '@/lib/schema';
 
 interface Branch {
   id: number;
@@ -18,7 +19,22 @@ interface User {
   email: string;
   role: string;
   branchName: string | null;
-  branchId: number | null; // Added branchId field
+  branchId: number | null;
+}
+
+interface EditFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  branchId: string;
+}
+
+interface FormErrors {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
 
 export default function ManageUserTable() {
@@ -26,15 +42,23 @@ export default function ManageUserTable() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [editUserId, setEditUserId] = useState<number | null>(null);
-  const [editFormData, setEditFormData] = useState({
+  const [editFormData, setEditFormData] = useState<EditFormData>({
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     branchId: '',
+  });
+  const [formErrors, setFormErrors] = useState<FormErrors>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -80,9 +104,11 @@ export default function ManageUserTable() {
       setEditFormData({
         name: user.name || '',
         email: user.email || '',
-        password: user.password_hash || '',
-        branchId: user.branchId?.toString() || '', // branchId must be a string for <select>
+        password: '', // Always empty for new password
+        confirmPassword: '', // Always empty for confirmation
+        branchId: user.branchId ? user.branchId.toString() : '',
       });
+      setFormErrors({ name: '', email: '', password: '', confirmPassword: '' });
       setModalOpen(true);
     } catch (error) {
       console.error('Failed to load user for edit:', error);
@@ -90,33 +116,111 @@ export default function ManageUserTable() {
     }
   };
 
+  const validateForm = (): boolean => {
+    let isValid = true;
+    const newErrors: FormErrors = { 
+      name: '', 
+      email: '', 
+      password: '', 
+      confirmPassword: '' 
+    };
+
+    // Name validation (only alphabets and spaces)
+    if (!editFormData.name.trim()) {
+      newErrors.name = 'Name is required';
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(editFormData.name.trim())) {
+      newErrors.name = 'Name should contain only alphabets';
+      isValid = false;
+    }
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+    // Email validation
+    if (!editFormData.email.trim()) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if ( !emailRegex.test(editFormData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Only validate password if it's not empty
+    if (editFormData.password) {
+      const passwordValidation = authHelpers.validatePasswordComplexity(editFormData.password);
+      if (!passwordValidation.valid) {
+        newErrors.password = passwordValidation.message || 'Password does not meet complexity requirements';
+        isValid = false;
+      }
+
+      if (editFormData.password !== editFormData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+        isValid = false;
+      }
+    }
+
+    setFormErrors(newErrors);
+    return isValid;
+  };
+
   const handleSave = async () => {
     if (!editUserId) return;
 
+    if (!validateForm()) {
+      return;
+    }
+
     try {
+      const payload: {
+        name: string;
+        email: string;
+        branchId: number;
+        password?: string;
+      } = {
+        name: editFormData.name.trim(),
+        email: editFormData.email.trim(),
+        branchId: Number(editFormData.branchId),
+      };
+
+      // Only include password if it's not empty
+      if (editFormData.password) {
+        payload.password = editFormData.password;
+      }
+
       const res = await fetch(`/api/users/${editUserId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: editFormData.name,
-          email: editFormData.email,
-          password: editFormData.password,
-          branchId: Number(editFormData.branchId),
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error('Failed to update user');
+      const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        // User with this email already exists
+        setFormErrors(prev => ({
+          ...prev,
+          email: 'User with this email already exists'
+        }));
+        return;
+      }
+      throw new Error(data.message || 'Failed to update user');
+    }
 
       setUsers((prev) =>
         prev.map((user) =>
           user.id === editUserId
-            ? { ...user, name: editFormData.name, email: editFormData.email, branchName: getBranchName(Number(editFormData.branchId)) }
+            ? { 
+                ...user, 
+                name: editFormData.name.trim(), 
+                email: editFormData.email.trim(), 
+                branchName: getBranchName(Number(editFormData.branchId)),
+                branchId: Number(editFormData.branchId)
+              }
             : user
         )
       );
 
       setMessage({ type: 'success', text: 'User updated successfully.' });
-
       setModalOpen(false);
       setEditUserId(null);
     } catch (error) {
@@ -150,15 +254,30 @@ export default function ManageUserTable() {
     setDeleteConfirmId(null);
   };
   
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // For name field, only allow alphabets and spaces
+    if (name === 'name') {
+      // Only update if the input is alphabetic or space
+      if (/^[a-zA-Z\s]*$/.test(value) || value === '') {
+        setEditFormData(prev => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setEditFormData(prev => ({ ...prev, [name]: value }));
+    }
+    
+    // Clear error when user types
+    setFormErrors(prev => ({
+      ...prev,
+      [name]: '',
+      ...(name === 'password' && { confirmPassword: '' })
+    }));
   };
 
-  const getBranchName = (branchId: number) => {
+  const getBranchName = (branchId: number): string => {
     const branch = branches.find((b) => b.id === branchId);
-    return branch ? branch.branch_name : 'N/A'; // Return only branch_name
+    return branch ? branch.branch_name : 'N/A';
   };
 
   const DeleteConfirmationDialog = () => {
@@ -187,7 +306,6 @@ export default function ManageUserTable() {
       </div>
     );
   };
-
 
   const columns: TableColumn<User>[] = [
     {
@@ -239,7 +357,6 @@ export default function ManageUserTable() {
         'dark:bg-gray-dark dark:shadow-card'
       )}
     >
-      {/* Message Box */}
       {message && (
         <div
           className={cn(
@@ -278,12 +395,11 @@ export default function ManageUserTable() {
         onSave={handleSave}
         formData={editFormData}
         handleChange={handleChange}
-        branches={branches} // Pass branches
+        branches={branches}
+        errors={formErrors}
       />
 
-<DeleteConfirmationDialog />
-
-
+      <DeleteConfirmationDialog />
     </div>
   );
 }

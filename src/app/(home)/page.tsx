@@ -13,7 +13,7 @@ import { OverviewCardsGroup } from "./_components/overview-cards";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import { RegionLabels } from "./_components/region-labels";
 import TopKycTypesBarChart from "@/components/Charts/top-ekyc-type/TopKycTypesBarChart";
-import KycGraph from './_components/Graph/KycGraph';
+// import KycGraph from './_components/Graph/KycGraph';
 type PropsType = {
   searchParams: Promise<{
     selected_time_frame?: string;
@@ -44,9 +44,9 @@ export default async function Home({ searchParams }: PropsType) {
       <div className="col-span-12 xl:col-span-5">
           <TopKycTypesBarChart />
         </div>
-        <div className="col-span-12 xl:col-span-7">
+        {/* <div className="col-span-12 xl:col-span-7">
         <KycGraph />
-        </div>
+        </div> */}
         
       </div>
     </>

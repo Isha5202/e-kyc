@@ -1,9 +1,12 @@
+//src\app\api\login\route.ts
+
 import { NextResponse } from 'next/server';
 import { createJWT, setAuthCookie } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-
+import bcrypt from 'bcrypt';
+import { authHelpers } from '@/lib/schema';
 export async function POST(req: Request) {
   const origin = req.headers.get("origin");
 
@@ -18,9 +21,12 @@ export async function POST(req: Request) {
       .limit(1)
       .execute();
 
-    // Check for valid user and password match
-    if (!user.length || user[0].password_hash !== password) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    // Verify password with hashed version
+    if (!user.length || !(await authHelpers.verifyPassword(password, user[0].password_hash))) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' }, 
+        { status: 401 }
+      );
     }
 
     const authenticatedUser = user[0];
@@ -31,7 +37,7 @@ export async function POST(req: Request) {
       role: authenticatedUser.role ?? 'user',
     });
 
-    console.log('[POST /api/login] Access token generated:', accessToken);
+    // console.log('[POST /api/login] Access token generated:', accessToken);
 
     // Set the access token in cookies using setAuthCookie
     await setAuthCookie(accessToken); // This already sets the accessToken cookie
