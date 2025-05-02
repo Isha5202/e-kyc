@@ -50,7 +50,7 @@ export default function TopKycTypesBarChart() {
               percentage: ((value / totalCount) * 100), // Keep percentage as a number
             }))
             .sort((a, b) => b.value - a.value) // Sort in descending order
-            .slice(0, 3); // Limit to top 10 KYC types
+            .slice(0, 5); // Limit to top 10 KYC types
 
           setData(chartData);
         }
@@ -72,14 +72,14 @@ export default function TopKycTypesBarChart() {
       <ResponsiveContainer width="100%" height={400}>
         <BarChart
           data={data}
-          margin={{ top: 20, left: 10, right: 10, bottom: 20 }}
+          margin={{ top: 30, left: 10, right: 10, bottom: 20 }}
         >
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip
             formatter={(value: number) => `${value} (${(value).toFixed(2)}%)`}
           />
-          <Legend verticalAlign="top" height={36} />
+          
           <Bar dataKey="value">
             {data.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

@@ -1,4 +1,3 @@
-// src/app/(home)/_components/overview-cards/index.tsx
 import { compactFormat } from "@/lib/format-number";
 import { getOverviewData } from "../../fetch";
 import { OverviewCard } from "./card";
@@ -29,6 +28,7 @@ export async function OverviewCardsGroup() {
     );
   } catch (error) {
     console.error("Error loading overview data:", error);
+
     // Return empty state or error component
     return (
       <div className="text-red-500 p-4">

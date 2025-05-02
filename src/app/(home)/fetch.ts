@@ -1,4 +1,3 @@
-// src/app/(home)/fetch.ts
 interface OverviewData {
   users: number;
   branches: number;
@@ -6,32 +5,43 @@ interface OverviewData {
 }
 
 export async function getOverviewData(): Promise<OverviewData> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
   try {
-    const res = await fetch('http://192.168.58.102:3000/api/overview', {
+    const res = await fetch('/api/overview', {
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId); // always clear immediately after fetch finishes
 
     if (!res.ok) {
       throw new Error(`API request failed with status ${res.status}`);
     }
 
     const data = await res.json();
-    
-    // Validate and convert response
-    const result = {
+
+    return {
       users: Number(data.users) || 0,
       branches: Number(data.branches) || 0,
       kyc: Number(data.kyc) || 0,
     };
-
-    return result;
   } catch (error) {
-    console.error('Error fetching overview data:', error);
-    throw new Error(
-      error instanceof Error 
-        ? error.message 
-        : 'Failed to fetch overview data'
-    );
+    clearTimeout(timeoutId); // also clear on error
+
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.error("Request timed out.");
+      throw new Error("Request timed out while fetching overview data");
+    }
+
+    if (error instanceof Error) {
+      console.error("Error fetching overview data:", error.message);
+      throw new Error(error.message);
+    }
+
+    console.error("Unknown error:", error);
+    throw new Error("Unknown error occurred while fetching overview data");
   }
 }

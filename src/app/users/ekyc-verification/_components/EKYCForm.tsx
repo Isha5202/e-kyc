@@ -372,6 +372,10 @@ export default function EKYCForm() {
             }),
           });
           const data = await res.json();
+          if (data.error === 'INSUFFICIENT_BALANCE' || data.sub_code === 'INSUFFICIENT_BALANCE') {
+          setResults((prev) => ({ ...prev, [type]: data }));
+          return;
+        }
           setTxnId(data.transaction_id);
           setReferenceId(data.reference_id);
           setAadhaarStep(2);

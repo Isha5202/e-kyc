@@ -75,6 +75,7 @@ async function handleAadhaarGenerateOTP(params: any) {
 
   const url = `${BASE_URL}/v2/ekyc/aadhaar/generate-otp?aadhaar_number=${params.aadhaar_number}&consent=Y&purpose=ForKYC`;
   const res = await fetch(url, { method: 'POST', headers });
+  
 
   const raw = await res.text();
   try {
