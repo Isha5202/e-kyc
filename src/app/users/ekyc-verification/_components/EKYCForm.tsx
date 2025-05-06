@@ -19,31 +19,59 @@ const ekycTypes = [
   { id: "voter", label: "Voter ID" },
   { id: "passport", label: "Passport" },
   { id: "pan-aadhaar-link", label: "Pan-Aadhaar Linking Status" },
-]; 
+];
 
-const validationPatterns: Record<string, { pattern: RegExp, maxLength: number, uppercaseOnly?: boolean, numbersOnly?: boolean }> = {
+const validationPatterns: Record<
+  string,
+  {
+    pattern: RegExp;
+    maxLength: number;
+    uppercaseOnly?: boolean;
+    numbersOnly?: boolean;
+  }
+> = {
   aadhaar_number: { pattern: /^[0-9]{12}$/, maxLength: 12 }, // Aadhaar number - only digits
-  pan_number: { pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, maxLength: 10, uppercaseOnly: true }, // PAN number - uppercase letters and digits only
-  cin: { pattern: /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/, maxLength: 21, uppercaseOnly: true }, // CIN - uppercase letters and digits only
+  pan_number: {
+    pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+    maxLength: 10,
+    uppercaseOnly: true,
+  }, // PAN number - uppercase letters and digits only
+  cin: {
+    pattern: /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/,
+    maxLength: 21,
+    uppercaseOnly: true,
+  }, // CIN - uppercase letters and digits only
   gstin: { pattern: /^[A-Z0-9]{15}$/, maxLength: 15 }, // GSTIN - only digits
-  rc_number: { pattern: /^[A-Z]{2}[0-9]{13}$/, maxLength: 15, uppercaseOnly: true }, // DL - uppercase letters and digits only
-  fssai_number: { 
-    pattern: /^[0-9]{14}$/,  // Exactly 14 digits
+  rc_number: {
+    pattern: /^[A-Z]{2}[0-9]{13}$/,
+    maxLength: 15,
+    uppercaseOnly: true,
+  }, // DL - uppercase letters and digits only
+  fssai_number: {
+    pattern: /^[0-9]{14}$/, // Exactly 14 digits
     maxLength: 14,
-    numbersOnly: true 
+    numbersOnly: true,
   },
-  shopact_number: { 
+  shopact_number: {
     pattern: /^[0-9]{2}\/[0-9]{3}\/[A-Z]{2}\/[0-9]{4}\/[0-9]{4}$/,
     maxLength: 19,
-    uppercaseOnly: true
-  },// Shopact - uppercase letters and digits only
-  udyam_number: { 
-    pattern: /^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7}$/, 
-    maxLength: 19, 
-    uppercaseOnly: true 
+    uppercaseOnly: true,
+  }, // Shopact - uppercase letters and digits only
+  udyam_number: {
+    pattern: /^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7}$/,
+    maxLength: 19,
+    uppercaseOnly: true,
   }, // Udyam Aadhaar - uppercase letters and digits only
-  epic_number: { pattern: /^[A-Z0-9]{10}$/, maxLength: 10, uppercaseOnly: true }, // Voter ID - uppercase letters and digits only
-  passport_number: { pattern: /^[A-Z]{2}[0-9]{13}$/, maxLength: 15, uppercaseOnly: true }, // Passport - uppercase letter followed by digits only
+  epic_number: {
+    pattern: /^[A-Z0-9]{10}$/,
+    maxLength: 10,
+    uppercaseOnly: true,
+  }, // Voter ID - uppercase letters and digits only
+  passport_number: {
+    pattern: /^[A-Z]{2}[0-9]{13}$/,
+    maxLength: 15,
+    uppercaseOnly: true,
+  }, // Passport - uppercase letter followed by digits only
   otp: { pattern: /^[0-9]{6}$/, maxLength: 6 }, // OTP - only digits
 };
 
@@ -80,87 +108,124 @@ export default function EKYCForm() {
       }
 
       // Special handling for number-only fields
-    if (validation?.numbersOnly) {
-      formattedValue = formattedValue.replace(/\D/g, ''); // Remove non-digits
-    }
+      if (validation?.numbersOnly) {
+        formattedValue = formattedValue.replace(/\D/g, ""); // Remove non-digits
+      }
 
-    // Special handling for EPIC number to remove special characters
-    if (name === "epic_number") {
-      // Remove any non-alphanumeric characters
-      formattedValue = formattedValue.replace(/[^A-Z0-9]/g, '');
-    }
+      // Special handling for EPIC number to remove special characters
+      if (name === "epic_number") {
+        // Remove any non-alphanumeric characters
+        formattedValue = formattedValue.replace(/[^A-Z0-9]/g, "");
+      }
 
-    if (name === "gstin") {
-      // Remove any non-alphanumeric characters
-      formattedValue = formattedValue.replace(/[^A-Z0-9]/g, '');
-    } 
-    if (name === "cin") {
-      // Remove any non-alphanumeric characters
-      formattedValue = formattedValue.replace(/[^A-Z0-9]/g, '');
-    }
+      if (name === "gstin") {
+        // Remove any non-alphanumeric characters
+        formattedValue = formattedValue.replace(/[^A-Z0-9]/g, "");
+      }
+      if (name === "cin") {
+        // Remove any non-alphanumeric characters
+        formattedValue = formattedValue.replace(/[^A-Z0-9]/g, "");
+      }
 
-    // Special handling for Shopact number
-    if (name === "shopact_number") {
-      // Allow numbers, uppercase letters, and forward slashes
-      formattedValue = formattedValue.replace(/[^0-9A-Z\/]/g, '');
-      
-      // Auto-format while preserving manually entered slashes
-      const parts = formattedValue.split('/');
-      let newValue = '';
-      
-      // First part (2 digits)
-      if (parts[0]) newValue += parts[0].slice(0, 2);
-      
-      // Second part (3 digits) - only add slash if user typed it or we have digits
-      if (parts[1] || (parts[0] && parts[0].length >= 2 && formattedValue.includes('/'))) {
-        newValue += '/' + (parts[1] || '').slice(0, 3);
+      // Special handling for Shopact number
+      if (name === "shopact_number") {
+        // Allow numbers, uppercase letters, and forward slashes
+        formattedValue = formattedValue.replace(/[^0-9A-Z\/]/g, "");
+
+        // Auto-format while preserving manually entered slashes
+        const parts = formattedValue.split("/");
+        let newValue = "";
+
+        // First part (2 digits)
+        if (parts[0]) newValue += parts[0].slice(0, 2);
+
+        // Second part (3 digits) - only add slash if user typed it or we have digits
+        if (
+          parts[1] ||
+          (parts[0] && parts[0].length >= 2 && formattedValue.includes("/"))
+        ) {
+          newValue += "/" + (parts[1] || "").slice(0, 3);
+        }
+
+        // Third part (2 letters)
+        if (
+          parts[2] ||
+          (parts[1] &&
+            parts[1].length >= 3 &&
+            formattedValue.includes("/", newValue.lastIndexOf("/")))
+        ) {
+          newValue += "/" + (parts[2] || "").slice(0, 2);
+        }
+
+        // Fourth part (4 digits)
+        if (
+          parts[3] ||
+          (parts[2] &&
+            parts[2].length >= 2 &&
+            formattedValue.includes("/", newValue.lastIndexOf("/")))
+        ) {
+          newValue += "/" + (parts[3] || "").slice(0, 4);
+        }
+
+        // Fifth part (4 digits)
+        if (
+          parts[4] ||
+          (parts[3] &&
+            parts[3].length >= 4 &&
+            formattedValue.includes("/", newValue.lastIndexOf("/")))
+        ) {
+          newValue += "/" + (parts[4] || "").slice(0, 4);
+        }
+
+        formattedValue = newValue;
       }
-      
-      // Third part (2 letters)
-      if (parts[2] || (parts[1] && parts[1].length >= 3 && formattedValue.includes('/', newValue.lastIndexOf('/')))) {
-        newValue += '/' + (parts[2] || '').slice(0, 2);
+
+      if (name === "udyam_number") {
+        // Remove invalid characters but keep hyphens
+        formattedValue = formattedValue.replace(/[^A-Z0-9-]/g, "");
+
+        // Automatically add UDYAM prefix if not present
+        if (!formattedValue.startsWith("UDYAM") && formattedValue.length > 0) {
+          formattedValue = "UDYAM-" + formattedValue;
+        }
+
+        // Auto-format while preserving manually entered hyphens
+        const parts = formattedValue.split("-");
+        let newValue = "";
+
+        // First part (UDYAM)
+        if (parts[0]) newValue += parts[0].slice(0, 5); // "UDYAM"
+
+        // Second part (2 letters)
+        if (
+          parts[1] ||
+          (parts[0] && parts[0].length >= 5 && formattedValue.includes("-"))
+        ) {
+          newValue += "-" + (parts[1] || "").slice(0, 2);
+        }
+
+        // Third part (2 digits)
+        if (
+          parts[2] ||
+          (parts[1] &&
+            parts[1].length >= 2 &&
+            formattedValue.includes("-", newValue.lastIndexOf("-")))
+        ) {
+          newValue += "-" + (parts[2] || "").slice(0, 2);
+        }
+
+        // Fourth part (7 digits)
+        if (
+          parts[3] ||
+          (parts[2] &&
+            parts[2].length >= 2 &&
+            formattedValue.includes("-", newValue.lastIndexOf("-")))
+        ) {
+          newValue += "-" + (parts[3] || "").slice(0, 7);
+        }
+
+        formattedValue = newValue;
       }
-      
-      // Fourth part (4 digits)
-      if (parts[3] || (parts[2] && parts[2].length >= 2 && formattedValue.includes('/', newValue.lastIndexOf('/')))) {
-        newValue += '/' + (parts[3] || '').slice(0, 4);
-      }
-      
-      // Fifth part (4 digits)
-      if (parts[4] || (parts[3] && parts[3].length >= 4 && formattedValue.includes('/', newValue.lastIndexOf('/')))) {
-        newValue += '/' + (parts[4] || '').slice(0, 4);
-      }
-      
-      formattedValue = newValue;
-    }
-    if (name === "udyam_number") {
-      // Remove invalid characters but keep hyphens
-      formattedValue = formattedValue.replace(/[^A-Z0-9-]/g, '');
-      
-      // Auto-format while preserving manually entered hyphens
-      const parts = formattedValue.split('-');
-      let newValue = '';
-      
-      // First part (UDYAM)
-      if (parts[0]) newValue += parts[0].slice(0, 5); // "UDYAM"
-      
-      // Second part (2 letters)
-      if (parts[1] || (parts[0] && parts[0].length >= 5 && formattedValue.includes('-'))) {
-        newValue += '-' + (parts[1] || '').slice(0, 2);
-      }
-      
-      // Third part (2 digits)
-      if (parts[2] || (parts[1] && parts[1].length >= 2 && formattedValue.includes('-', newValue.lastIndexOf('-')))) {
-        newValue += '-' + (parts[2] || '').slice(0, 2);
-      }
-      
-      // Fourth part (7 digits)
-      if (parts[3] || (parts[2] && parts[2].length >= 2 && formattedValue.includes('-', newValue.lastIndexOf('-')))) {
-        newValue += '-' + (parts[3] || '').slice(0, 7);
-      }
-      
-      formattedValue = newValue;
-    }
 
       // Validate input length
       if (validation && value.length > validation.maxLength) {
@@ -181,8 +246,8 @@ export default function EKYCForm() {
 
     // Clear error when user types
     if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = {...prev};
+      setErrors((prev) => {
+        const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
@@ -198,8 +263,13 @@ export default function EKYCForm() {
         if (!formData.aadhaar_number) {
           newErrors.aadhaar_number = "Aadhaar number is required";
           isValid = false;
-        } else if (!validationPatterns.aadhaar_number.pattern.test(formData.aadhaar_number)) {
-          newErrors.aadhaar_number = "Invalid Aadhaar number (must be 12 digits)";
+        } else if (
+          !validationPatterns.aadhaar_number.pattern.test(
+            formData.aadhaar_number,
+          )
+        ) {
+          newErrors.aadhaar_number =
+            "Invalid Aadhaar number (must be 12 digits)";
           isValid = false;
         }
       } else {
@@ -218,7 +288,9 @@ export default function EKYCForm() {
           if (!formData.pan_number) {
             newErrors.pan_number = "PAN number is required";
             isValid = false;
-          } else if (!validationPatterns.pan_number.pattern.test(formData.pan_number)) {
+          } else if (
+            !validationPatterns.pan_number.pattern.test(formData.pan_number)
+          ) {
             newErrors.pan_number = "Invalid PAN number (format: ABCDE1234F)";
             isValid = false;
           }
@@ -245,7 +317,9 @@ export default function EKYCForm() {
           if (!formData.rc_number) {
             newErrors.rc_number = "RC number is required";
             isValid = false;
-          } else if (!validationPatterns.rc_number.pattern.test(formData.rc_number)) {
+          } else if (
+            !validationPatterns.rc_number.pattern.test(formData.rc_number)
+          ) {
             newErrors.rc_number = "Invalid RC number format";
             isValid = false;
           }
@@ -254,36 +328,46 @@ export default function EKYCForm() {
             isValid = false;
           }
           break;
-          case "fssai":
-            if (!formData.fssai_number) {
-              newErrors.fssai_number = "FSSAI number is required";
-              isValid = false;
-            } else if (!validationPatterns.fssai_number.pattern.test(formData.fssai_number)) {
-              newErrors.fssai_number = "Invalid FSSAI number (must be exactly 14 digits)";
-              isValid = false;
-            } else if (formData.fssai_number.length !== 14) {
-              newErrors.fssai_number = "FSSAI number must be 14 digits";
-              isValid = false;
-            }
-            break;
-          case "shopact":
-            if (!formData.shopact_number) {
-              newErrors.shopact_number = "Shopact number is required";
-              isValid = false;
-            } else if (!validationPatterns.shopact_number.pattern.test(formData.shopact_number)) {
-              newErrors.shopact_number = "Invalid Shopact number format (should be like 34/156/CE/0058/2023)";
-              isValid = false;
-            }
-            if (!formData.state_code) {
-              newErrors.state_code = "State is required";
-              isValid = false;
-            }
-            break;
+        case "fssai":
+          if (!formData.fssai_number) {
+            newErrors.fssai_number = "FSSAI number is required";
+            isValid = false;
+          } else if (
+            !validationPatterns.fssai_number.pattern.test(formData.fssai_number)
+          ) {
+            newErrors.fssai_number =
+              "Invalid FSSAI number (must be exactly 14 digits)";
+            isValid = false;
+          } else if (formData.fssai_number.length !== 14) {
+            newErrors.fssai_number = "FSSAI number must be 14 digits";
+            isValid = false;
+          }
+          break;
+        case "shopact":
+          if (!formData.shopact_number) {
+            newErrors.shopact_number = "Shopact number is required";
+            isValid = false;
+          } else if (
+            !validationPatterns.shopact_number.pattern.test(
+              formData.shopact_number,
+            )
+          ) {
+            newErrors.shopact_number =
+              "Invalid Shopact number format (should be like 34/156/CE/0058/2023)";
+            isValid = false;
+          }
+          if (!formData.state_code) {
+            newErrors.state_code = "State is required";
+            isValid = false;
+          }
+          break;
         case "udyam":
           if (!formData.udyam_number) {
             newErrors.udyam_number = "Udyam number is required";
             isValid = false;
-          } else if (!validationPatterns.udyam_number.pattern.test(formData.udyam_number)) {
+          } else if (
+            !validationPatterns.udyam_number.pattern.test(formData.udyam_number)
+          ) {
             newErrors.udyam_number = "Invalid Udyam number format";
             isValid = false;
           }
@@ -292,7 +376,9 @@ export default function EKYCForm() {
           if (!formData.epic_number) {
             newErrors.epic_number = "Voter number is required";
             isValid = false;
-          } else if (!validationPatterns.epic_number.pattern.test(formData.epic_number)) {
+          } else if (
+            !validationPatterns.epic_number.pattern.test(formData.epic_number)
+          ) {
             newErrors.epic_number = "Invalid Voter number format";
             isValid = false;
           }
@@ -301,7 +387,11 @@ export default function EKYCForm() {
           if (!formData.passport_number) {
             newErrors.passport_number = "Passport number is required";
             isValid = false;
-          } else if (!validationPatterns.passport_number.pattern.test(formData.passport_number)) {
+          } else if (
+            !validationPatterns.passport_number.pattern.test(
+              formData.passport_number,
+            )
+          ) {
             newErrors.passport_number = "Invalid Passport number format";
             isValid = false;
           }
@@ -314,15 +404,22 @@ export default function EKYCForm() {
           if (!formData.pan_number) {
             newErrors.pan_number = "PAN number is required";
             isValid = false;
-          } else if (!validationPatterns.pan_number.pattern.test(formData.pan_number)) {
+          } else if (
+            !validationPatterns.pan_number.pattern.test(formData.pan_number)
+          ) {
             newErrors.pan_number = "Invalid PAN number format";
             isValid = false;
           }
           if (!formData.aadhaar_number) {
             newErrors.aadhaar_number = "Aadhaar number is required";
             isValid = false;
-          } else if (!validationPatterns.aadhaar_number.pattern.test(formData.aadhaar_number)) {
-            newErrors.aadhaar_number = "Invalid Aadhaar number (must be 12 digits)";
+          } else if (
+            !validationPatterns.aadhaar_number.pattern.test(
+              formData.aadhaar_number,
+            )
+          ) {
+            newErrors.aadhaar_number =
+              "Invalid Aadhaar number (must be 12 digits)";
             isValid = false;
           }
           break;
@@ -335,25 +432,36 @@ export default function EKYCForm() {
 
   const getInputFieldForType = (type: string) => {
     switch (type) {
-      case "pan": return "pan_number";
-      case "aadhar": return "aadhaar_number";
-      case "cin": return "cin";
-      case "gst": return "gstin";
-      case "dl": return "rc_number";
-      case "fssai": return "fssai_number";
-      case "shopact": return "shopact_number";
-      case "udyam": return "udyam_number";
-      case "voter": return "epic_number";
-      case "passport": return "passport_number";
-      default: return "inputValue";
+      case "pan":
+        return "pan_number";
+      case "aadhar":
+        return "aadhaar_number";
+      case "cin":
+        return "cin";
+      case "gst":
+        return "gstin";
+      case "dl":
+        return "rc_number";
+      case "fssai":
+        return "fssai_number";
+      case "shopact":
+        return "shopact_number";
+      case "udyam":
+        return "udyam_number";
+      case "voter":
+        return "epic_number";
+      case "passport":
+        return "passport_number";
+      default:
+        return "inputValue";
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   const handleSubmit = async (e: React.FormEvent, type: string) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm(type)) {
       return;
@@ -372,10 +480,13 @@ export default function EKYCForm() {
             }),
           });
           const data = await res.json();
-          if (data.error === 'INSUFFICIENT_BALANCE' || data.sub_code === 'INSUFFICIENT_BALANCE') {
-          setResults((prev) => ({ ...prev, [type]: data }));
-          return;
-        }
+          if (
+            data.error === "INSUFFICIENT_BALANCE" ||
+            data.sub_code === "INSUFFICIENT_BALANCE"
+          ) {
+            setResults((prev) => ({ ...prev, [type]: data }));
+            return;
+          }
           setTxnId(data.transaction_id);
           setReferenceId(data.reference_id);
           setAadhaarStep(2);
@@ -610,9 +721,9 @@ export default function EKYCForm() {
         return (
           <InputGroup
             label="Udyam Aadhaar"
-            value={formData.udyam_number || ""}
+            value={formData.udyam_number || "UDYAM-"}
             name="udyam_number"
-            placeholder="Enter Udyam Aadhaar Number"
+            placeholder="UDYAM-XX-XX-XXXXXXX"
             type="text"
             handleChange={handleChange}
             maxLength={validationPatterns.udyam_number.maxLength}
@@ -702,9 +813,9 @@ export default function EKYCForm() {
               <Tab
                 key={type.id}
                 className={({ selected }) =>
-                  `cursor-pointer rounded px-4 py-2 text-left border-blue-100 ${
+                  `cursor-pointer rounded border-blue-100 px-4 py-2 text-left ${
                     selected
-                      ? "bg-blue-100 font-medium text-blue-900 border-blue-100"
+                      ? "border-blue-100 bg-blue-100 font-medium text-blue-900"
                       : "hover:bg-gray-100"
                   }`
                 }
@@ -753,7 +864,7 @@ export default function EKYCForm() {
                     ekycFormInput={{
                       panNumber: formData.pan_number,
                       aadhaarNumber: formData.aadhaar_number,
-                      inputValue: formData[getInputFieldForType(type.id)]
+                      inputValue: formData[getInputFieldForType(type.id)],
                     }}
                   />
                 )}

@@ -58,10 +58,11 @@ export function AddBranchForm() {
         }
         return '';
       
-      case 'branch_name':
-        if (!value.trim()) return 'Branch name is required';
-        if (value.length < 3 || value.length > 50) return 'Branch name must be 3-50 characters';
-        return '';
+        case 'branch_name':
+          if (!value.trim()) return 'Branch name is required';
+          if (value.length < 3 || value.length > 50) return 'Branch name must be 3-50 characters';
+          if (!/^[a-zA-Z0-9\s]+$/.test(value)) return 'Branch name must only contain letters and numbers';
+          return '';
       
       case 'address_line1':
         if (!value.trim()) return 'Address is required';

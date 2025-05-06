@@ -1,6 +1,6 @@
 import { getTokenFromCookies, verifyJWT } from './auth';
 import { db } from './db';
-import { users } from './schema';
+import { users, kycLogs } from './schema';
 import { eq } from 'drizzle-orm';
 
 export async function getCurrentUser() {

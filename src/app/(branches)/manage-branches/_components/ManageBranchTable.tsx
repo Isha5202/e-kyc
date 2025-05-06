@@ -71,11 +71,18 @@ export default function ManageBranchTable() {
       ifsc_code: ''
     };
 
-    // Branch Name validation
-    if (!editFormData.branch_name.trim()) {
-      newErrors.branch_name = "Branch name is required";
-      isValid = false;
-    }
+// Branch Name validation
+if (!editFormData.branch_name.trim()) {
+  newErrors.branch_name = "Branch name is required";
+  isValid = false;
+} else if (!/^[a-zA-Z0-9\s]+$/.test(editFormData.branch_name)) {
+  newErrors.branch_name = "Branch name must only contain letters and numbers";
+  isValid = false;
+} else if (editFormData.branch_name.length < 3 || editFormData.branch_name.length > 50) {
+  newErrors.branch_name = "Branch name must be 3-50 characters long";
+  isValid = false;
+}
+
 
  // IFSC Code validation (must come before branch code validation)
  if (!editFormData.ifsc_code.trim()) {

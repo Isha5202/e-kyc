@@ -53,14 +53,85 @@ const KYCResultCard: React.FC<KYCResultCardProps> = ({ type, data , ekycFormInpu
 
   const resultData = extractResultData(data);
   // Check if sub_code is "INSUFFICIENT_BALANCE"
-  const isInsufficientBalance = resultData?.sub_code === "INSUFFICIENT_BALANCE";
-  if (isInsufficientBalance) {
-    return (
-      <div className="mt-4 rounded-xl bg-red-100 p-4 text-red-700">
-        <h2 className="mb-4 text-lg font-bold">Insufficient Balance</h2>
-        <p>The operation could not be completed due to insufficient balance.</p>
-      </div>
-    );
+  // Enhanced error handling
+  const renderError = (message: string) => (
+    <div className="mt-4 rounded-xl bg-red-100 p-4 text-red-700">
+      <h2 className="mb-4 text-lg font-bold">Error</h2>
+      <p>{message}</p>
+    </div>
+  );
+
+  // Check for various error conditions
+  if (!data) {
+    return renderError("No response data received from the server.");
+  }
+
+  if (data.status === "error" || data.error) {
+    return renderError(data.message || data.error || "An unknown error occurred.");
+  }
+
+  if (data.status_code && data.status_code !== 200) {
+    console.log('Error status code received:', data.status_code);
+    console.log('Error data:', data);
+    
+    switch (data.status_code) {
+      case 400:
+        console.log('Bad request error');
+        return renderError("Bad request. Please check your input and try again.");
+      case 401:
+        console.log('Unauthorized error');
+        return renderError("Unauthorized. Please check your authentication credentials.");
+      case 403:
+        console.log('Forbidden error');
+        return renderError("Forbidden. You don't have permission to access this resource.");
+      case 404:
+        console.log('Not found error');
+        return renderError("The requested resource was not found.");
+      case 408:
+        console.log('Timeout error');
+        return renderError("Request timeout. Please try again.");
+      case 429:
+        console.log('Rate limit error');
+        return renderError("Too many requests. Please wait and try again later.");
+      case 500:
+        console.log('Server error');
+        return renderError("Internal server error. Please try again later.");
+      case 502:
+        console.log('Bad gateway error');
+        return renderError("Bad gateway. The server received an invalid response.");
+      case 503:
+        console.log('Service unavailable error');
+        return renderError("Service unavailable. The server is temporarily unavailable.");
+      case 504:
+        console.log('Gateway timeout error');
+        return renderError("Gateway timeout. The server didn't respond in time.");
+      default:
+        console.log('Unhandled error status code');
+        return renderError(`Error ${data.status_code}: ${data.message || "An error occurred"}`);
+    }
+  }
+
+  // Check for sub_code errors
+  if (resultData?.sub_code && resultData.sub_code !== "SUCCESS") {
+    console.log('Error sub_code received:', resultData.sub_code);
+    console.log('Full error details:', resultData);
+    
+    switch (resultData.sub_code) {
+      case "INSUFFICIENT_BALANCE":
+        console.warn('Insufficient balance error - check user funds');
+        return renderError("Insufficient Balance: The operation could not be completed due to insufficient balance.");
+      case "NO_RECORD_FOUND":
+        console.warn('No record found error - verify search parameters');
+        return renderError("No record found for the provided details.");
+      default:
+        console.error('Unhandled sub_code error:', resultData.sub_code);
+        return renderError(`Error: ${resultData.sub_code} - ${resultData.message || "An error occurred"}`);
+    }
+}
+
+  // Check if result data is empty but response was successful
+  if (!resultData || Object.keys(resultData).length === 0) {
+    return renderError("No data found for the provided details.");
   }
 
   const typeName = typeMapping[type] || type;

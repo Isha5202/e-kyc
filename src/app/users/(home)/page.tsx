@@ -7,7 +7,8 @@ import { ChatsCard } from "./_components/chats-card";
 import { OverviewCardsGroup } from "./_components/overview-cards";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import { RegionLabels } from "./_components/region-labels";
-
+import UserTopKycBarChart from "@/components/Charts/user-top-ekyc-type/UserTopKycGraph";
+import UserKycLineChart from "@/components/Charts/kyc-stats/UserKycLineChart";
 type PropsType = {
   searchParams: Promise<{
     selected_time_frame?: string;
@@ -20,7 +21,8 @@ export default async function Home({ searchParams }: PropsType) {
 
   return (
     <>
-      <Suspense fallback={<OverviewCardsSkeleton />}>
+
+      {/* <Suspense fallback={<OverviewCardsSkeleton />}>
         <OverviewCardsGroup />
       </Suspense>
 
@@ -38,7 +40,17 @@ export default async function Home({ searchParams }: PropsType) {
         <Suspense fallback={null}>
           <ChatsCard />
         </Suspense>
-      </div>
+      </div> */}
+
+
+<div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
+<div className="col-span-12 xl:col-span-5">
+<UserTopKycBarChart/>
+</div>
+<div className="col-span-12 xl:col-span-7">
+<UserKycLineChart/>
+</div>
+        </div>
     </>
   );
 }

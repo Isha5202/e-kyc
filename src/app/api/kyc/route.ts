@@ -9,7 +9,7 @@ const BASE_URL = 'https://production.deepvue.tech';
 // Add type labels
 const typeLabels: Record<string, string> = {
   aadhar: 'Aadhaar',
-  'aadhar-verify': 'Aadhaar OTP Verify',
+  'aadhar-verify': 'Aadhaar',
   pan: 'PAN Card',
   'pan-aadhaar-link': 'PAN-Aadhaar Link Status',
   dl: 'Driving License',
@@ -309,7 +309,7 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case 'aadhar':
         data = await handleAadhaarGenerateOTP(params);
-        break;
+        return NextResponse.json(data); // ✅ Don't log this step
       case 'aadhar-verify':
         data = await handleAadhaarVerifyOTP(params);
         break;
@@ -355,8 +355,10 @@ export async function POST(req: NextRequest) {
   // ✅ Use label mapping for KYC type name
   const readableType = typeLabels[type] || type;
 
-  console.log("Logging KYC attempt:", { userId, type: readableType, status });
-  await logKycAttempt(userId, readableType, status);
+  if (type !== 'aadhar') {
+    console.log("Logging KYC attempt:", { userId, type: readableType, status });
+    await logKycAttempt(userId, readableType, status);
+  }
     
     return NextResponse.json(data);
   } catch (err) {
